@@ -24,7 +24,17 @@
 
 class Application;
 
+namespace Colors{
+    const glm::vec4 Black   = {0.0f, 0.0f, 0.0f, 1.0f};
+    const glm::vec4 White   = {1.0f, 1.0f, 1.0f, 1.0f};
+    const glm::vec4 Magenta = {1.0f, 0.0f, 1.0f, 1.0f};
+    const glm::vec4 Red     = {1.0f, 0.0f, 0.0f, 1.0f};
+    const glm::vec4 Green   = {0.0f, 1.0f, 0.0f, 1.0f};
+    const glm::vec4 Blue    = {0.0f, 0.0f, 1.0f, 1.0f};
+}
+
 class View {
+
 	typedef struct {
 		GLFWwindow* ptr;
 		std::string title;
@@ -69,7 +79,7 @@ public:
 	View();
 	int Init(Application* parent);
 	int Render(double dt);
-	void RenderText(const std::string& text, float x, float y, float size);
+	void RenderText(const std::string& text, float x, float y, float size, const glm::vec4& color);
 
 private:
 

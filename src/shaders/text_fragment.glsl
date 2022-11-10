@@ -70,6 +70,6 @@ void main()
 		vec4 texture_color = texture2D(onetex, fuv);
 		vec4 color = texture_color * text_color;
 
-		gl_FragColor = vec4(color.r, color.g, color.b, 1.0);
+		gl_FragColor = vec4(color.r, color.g, color.b, color.a);
     } 
 }

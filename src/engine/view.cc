@@ -48,7 +48,10 @@ int View::Init(Application* parent) {
     glViewport(0, 0, win.width, win.height);		//Perspective projection matrix
     glfwSetFramebufferSizeCallback(win.ptr, framebuffer_size_callback);
 
-	//glfwSwapInterval(0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    //glfwSwapInterval(0);
 
 	//Shaders
 //	shaders[DEFAULT] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
@@ -83,19 +86,23 @@ int View::Render(double dt) {
 	if(glfwWindowShouldClose(win.ptr))
 		app->Shutdown();
 
-	glClearColor(CLAMP(0x00), CLAMP(0x00), CLAMP(0x00), CLAMP(0xff));
+    glm::vec4 clr = Colors::Magenta;
+	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	RenderText("I Love Madilicious", 0.0, 0.0, 1.0f);
+	RenderText("Awesome work! High five!", 0.0, 0.0, 1.0f, Colors::White);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
 	return 0;
 }
 
-void View::RenderText(const std::string& text, float x, float y, float size) {
+void View::RenderText(const std::string& text, float x, float y, float size, const glm::vec4& color) {
     glUseProgram(shaders[TEXT].id);
     glBindVertexArray(VAO);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	/*glActiveTexture(GL_TEXTURE0);*/
 	glBindTexture(GL_TEXTURE_2D, textures[CHARMAP]);
@@ -120,9 +127,7 @@ void View::RenderText(const std::string& text, float x, float y, float size) {
 
     shaders[TEXT].SetUniform4m(camera.view, "view_matrix");
     shaders[TEXT].SetUniform4m(camera.projection, "projection_matrix");
-
-	int loc_color = glGetUniformLocation(shaders[TEXT].id, "text_color");
-	glUniform4f(loc_color, 1.0, 1.0, 1.0, 1.0);
+    shaders[TEXT].SetUniform4f(color, "text_color");
 
 	// Set the text data
 	assert(512 > len);
@@ -136,6 +141,7 @@ void View::RenderText(const std::string& text, float x, float y, float size) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+    glDisable(GL_BLEND);
 }
 
 //  STATICS:
