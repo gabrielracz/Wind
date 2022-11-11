@@ -49,6 +49,7 @@ void FreeCamera::Update() {
 	direction.x = cos(yaw) * cos(pitch);
 	direction.y = sin(pitch);
 	direction.z = sin(yaw) * cos(pitch);
+    projection = glm::perspective(fov, aspect_ratio, 0.1f, 500.0f);
 	view = glm::lookAt(position, position + direction, up);
 }
 
@@ -76,4 +77,8 @@ void FreeCamera::StepFov(float f) {
 		fov = PI/2.0f;
 	}
 	projection = glm::perspective(fov, aspect_ratio, 0.1f, 100.0f);
+}
+
+void FreeCamera::SetAspectRatio(float asp) {
+    aspect_ratio = asp;
 }

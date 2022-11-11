@@ -16,8 +16,8 @@ out vec2 uv_interp;
 void main()
 {
     // Transform vertex
-	vec4 vertex_pos = vec4(vertex.xyz, 1.0);
-	gl_Position = projection_matrix * view_matrix * transformation_matrix * vertex_pos;
+	vec4 vertex_pos = vec4(vertex.xy,0.0, 1.0);
+	gl_Position = transformation_matrix* projection_matrix * vertex_pos;
 //	gl_Position = view_matrix * vertex_pos;
 
     // Pass attributes to fragment shader

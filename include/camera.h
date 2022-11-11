@@ -29,6 +29,7 @@ public:
 	void StepYaw(float yaw);
 	void StepPitch(float pitch);
 	void StepFov(float fov);
+    void SetAspectRatio(float asp);
 
 	void SetLookSens(float sens);
 	void SetZoomSense(float sens);

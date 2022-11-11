@@ -101,15 +101,15 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::White;
+    glm::vec4 clr = Colors::Grey;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera.Update();
     char fps_str[32];
     std::sprintf(fps_str, "%.4f ms", dt);
-	render_text(fps_str, 0.0, 0.0, 1.0f, Colors::Black);
     render_mesh(meshes[CUBE]);
+    render_text(fps_str, -0.69, -0.875, 20, Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
@@ -148,17 +148,21 @@ void View::render_text(const std::string& text, float x, float y, float size, co
 	float sx = width;
 	float sy = size;
 
-    glm::mat4 transformation_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(sx, sy, 1.0f));
+    float asp = 1.0f/((float)win.width/(float)win.height);
+    glm::mat4 transformation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
+    transformation_matrix = glm::scale(transformation_matrix, glm::vec3(sx, sy, 1.0f));
 
-	float asp = 1.0f/((float)win.width/(float)win.height);
+
+
     glm::mat4 view_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(asp, 1.0f, 1.0f));
 //    glm::mat4 view_matrix(1.0f);
 
 	int loc_transform = glGetUniformLocation(shaders[TEXT].id, "transformation_matrix");
 	glUniformMatrix4fv(loc_transform, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
 
-    shaders[TEXT].SetUniform4m(camera.view, "view_matrix");
-    shaders[TEXT].SetUniform4m(camera.projection, "projection_matrix");
+    float w = (float)win.width/2.0f;
+    float h = (float)win.height/2.0f;
+    shaders[TEXT].SetUniform4m(glm::ortho<float>(-w, w, -h, h, -1.0f, 1.0f), "projection_matrix");
     shaders[TEXT].SetUniform4f(color, "text_color");
 
 	// Set the text data
@@ -286,6 +290,7 @@ void View::callback_resize_framebuffer(GLFWwindow* window, int width, int height
     View* v = (View*) glfwGetWindowUserPointer(window);
     v->win.width = width;
     v->win.height = height;
+    v->camera.SetAspectRatio((float)width/(float)height);
     glViewport(0, 0, width, height);
 }
 
@@ -293,10 +298,10 @@ void View::callback_resize_framebuffer(GLFWwindow* window, int width, int height
 unsigned int View::init_quad()
 {
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, 0.0f,  0.0f, 1.0f
+		 1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
+         1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,  0.0f, 1.0f
 	};
 
 	unsigned int indices[] = {

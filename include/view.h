@@ -29,6 +29,7 @@ class Simulation;
 
 namespace Colors{
     const glm::vec4 Black   = {0.0f, 0.0f, 0.0f, 1.0f};
+    const glm::vec4 Grey    = {0.7f, 0.7f, 0.7f, 1.0f};
     const glm::vec4 White   = {1.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Magenta = {1.0f, 0.0f, 1.0f, 1.0f};
     const glm::vec4 Red     = {1.0f, 0.0f, 0.0f, 1.0f};
