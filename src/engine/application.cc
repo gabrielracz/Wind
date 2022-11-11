@@ -4,13 +4,15 @@ Application::Application()
 	: view("[]", 640, 420)
  {}
 
-int Application::Init() {
-	view.Init(this);
-	model.Init();
+int Application::init()
+{
+	view.init(this, &sim);
+	sim.init();
 	return 0;
 }
 
-int Application::Run() {
+int Application::run()
+{
 	srand(time(NULL));
 	float current_time = 0;
 	float last_time = glfwGetTime();
@@ -30,13 +32,13 @@ int Application::Run() {
 		}
 		last_time = current_time;
 
-		model.Step(delta_time);
-		view.Render(delta_time);
+		sim.update(delta_time);
+		view.render(delta_time);
 	}
 	return 0;
 }
 
-void Application::Shutdown() {
+void Application::shutdown()
+{
 	running = false;
-	return;
 }

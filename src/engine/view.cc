@@ -1,26 +1,31 @@
 #include "view.h"
 #include "camera.h"
 #include "application.h"
+#include "simulation.h"
 #include <paths.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-View::View(const std::string& win_title, int win_width, int win_height) {
+View::View(const std::string& win_title, int win_width, int win_height)
+{
 	win.title = win_title;
 	win.height = win_height;
 	win.width = win_width;
 }
 
-View::View() {
+View::View()
+{
 	float aspect_ratio = 16.0f / 9.0f;
 	int win_height = 960;
 	int window_width = round(win_height * aspect_ratio);
 	View("__ Plume", win_height, window_width);
 }
 
-int View::Init(Application* parent) {
-	app = parent;
+int View::init(Application* parent, Simulation* model)
+{
+    app = parent;
+    sim = model;
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -36,26 +41,25 @@ int View::Init(Application* parent) {
 	}
 	glfwMakeContextCurrent(win.ptr);
 
+    glfwSetWindowUserPointer(win.ptr, this);
 	glfwSetInputMode(win.ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPosCallback(win.ptr, mouse_callback);
-	glfwSetScrollCallback(win.ptr, scroll_callback);
-	glfwSetKeyCallback(win.ptr, key_callback);
-	glfwSetMouseButtonCallback(win.ptr, mouse_button_callback);
-	glfwSetWindowUserPointer(win.ptr, this);
+	glfwSetCursorPosCallback(win.ptr,       callback_mouse_move);
+    glfwSetMouseButtonCallback(win.ptr,     callback_mouse_button);
+    glfwSetScrollCallback(win.ptr,          callback_scroll);
+	glfwSetKeyCallback(win.ptr,             callback_keyboard);
+    glfwSetFramebufferSizeCallback(win.ptr, callback_resize_framebuffer);
 
     glewExperimental = GL_TRUE;
     glewInit();
     glViewport(0, 0, win.width, win.height);		//Perspective projection matrix
-    glfwSetFramebufferSizeCallback(win.ptr, framebuffer_size_callback);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
     //glfwSwapInterval(0);
 
 	//Shaders
-//	shaders[DEFAULT] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
-//					  SHADER_DIRECTORY"/fragment_shader.glsl");
+	shaders[DEFAULT] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
+					  SHADER_DIRECTORY"/fragment_shader.glsl");
 //
 //	shaders[GRID] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
 //					  SHADER_DIRECTORY"/fragment_shader.glsl");
@@ -66,9 +70,19 @@ int View::Init(Application* parent) {
 	shaders[TEXT] = Shader(SHADER_DIRECTORY"/text_vertex.glsl",
 					  SHADER_DIRECTORY"/text_fragment.glsl");
 
-	textures[CHARMAP] = LoadTexture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
+    textures[CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
+	textures[CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
 
-	VAO = InitQuad();
+	VAO = init_quad();
+    Layout layout = {
+            {FLOAT3, "position"},
+            {FLOAT2, "uv"},
+            {FLOAT3, "normal"}
+    };
+    meshes[CUBE] = Mesh(ShapeBuilder::cube_vertices_tn, sizeof(ShapeBuilder::cube_vertices_tn)/sizeof(float),
+                        {}, 0,
+                        &(textures[CRATE]), 1,
+                        layout);
 
 	glm::vec3 camera_position(0.0f, 2.5f, 5.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
@@ -82,30 +96,49 @@ int View::Init(Application* parent) {
 	return 0;
 }
 
-int View::Render(double dt) {
+int View::render(double dt)
+{
 	if(glfwWindowShouldClose(win.ptr))
-		app->Shutdown();
+		app->shutdown();
 
-    glm::vec4 clr = Colors::Magenta;
+    glm::vec4 clr = Colors::White;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	RenderText("Awesome work! High five!", 0.0, 0.0, 1.0f, Colors::White);
+    camera.Update();
+    char fps_str[32];
+    std::sprintf(fps_str, "%.4f ms", dt);
+	render_text(fps_str, 0.0, 0.0, 1.0f, Colors::Black);
+    render_mesh(meshes[CUBE]);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
 	return 0;
 }
 
-void View::RenderText(const std::string& text, float x, float y, float size, const glm::vec4& color) {
+void View::render_mesh(Mesh& mesh)
+{
+    Shader& shd = shaders[DEFAULT];
+    shd.use();
+    shd.SetUniform3f(Colors::White, "light_color");
+    shd.SetUniform3f(glm::vec3(0.0f, 4.0f, 0.0f), "light_pos");
+    shd.SetUniform4m(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), "model");
+    shd.SetUniform4m(camera.projection, "projection");
+    shd.SetUniform4m(camera.view, "view");
+    mesh.Draw(shd);
+
+}
+
+void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color)
+{
     glUseProgram(shaders[TEXT].id);
     glBindVertexArray(VAO);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*glActiveTexture(GL_TEXTURE0);*/
-	glBindTexture(GL_TEXTURE_2D, textures[CHARMAP]);
+//	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textures[CHARMAP].id);
 
 	int len = text.size();
 	int loc_text_len = glGetUniformLocation(shaders[TEXT].id, "text_len");
@@ -121,7 +154,6 @@ void View::RenderText(const std::string& text, float x, float y, float size, con
     glm::mat4 view_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(asp, 1.0f, 1.0f));
 //    glm::mat4 view_matrix(1.0f);
 
-    camera.Update();
 	int loc_transform = glGetUniformLocation(shaders[TEXT].id, "transformation_matrix");
 	glUniformMatrix4fv(loc_transform, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
 
@@ -146,7 +178,8 @@ void View::RenderText(const std::string& text, float x, float y, float size, con
 
 //  STATICS:
 static int cnt = 0;
-void View::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+void View::callback_mouse_move(GLFWwindow* window, double xpos, double ypos)
+{
 	View* v = (View*) glfwGetWindowUserPointer(window);
 	Mouse& mouse = v->mouse;
 	if (mouse.first_captured) {
@@ -168,12 +201,14 @@ void View::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	v->camera.StepPitch(-yoffset);
 }
 
-void View::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void View::callback_scroll(GLFWwindow* window, double xoffset, double yoffset)
+{
 	View* v = (View*) glfwGetWindowUserPointer(window);
 	v->camera.StepFov(-yoffset);
 }
 
-void View::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void View::callback_mouse_button(GLFWwindow* window, int button, int action, int mods)
+{
 	View* v = (View*) glfwGetWindowUserPointer(window);
 	Mouse& mouse = v->mouse;
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
@@ -184,14 +219,15 @@ void View::mouse_button_callback(GLFWwindow* window, int button, int action, int
 		}
 		else {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			glfwSetCursorPosCallback(window, mouse_callback);
+			glfwSetCursorPosCallback(window, callback_mouse_move);
 			mouse.captured = true;
 			mouse.first_captured = true;
 		}
 	}
 }
 
-void View::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
 	View* v = (View*) glfwGetWindowUserPointer(window);
 	FreeCamera* cam = &v->camera;
 
@@ -245,7 +281,8 @@ void View::key_callback(GLFWwindow* window, int key, int scancode, int action, i
 
 }
 
-void View::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void View::callback_resize_framebuffer(GLFWwindow* window, int width, int height)
+{
     View* v = (View*) glfwGetWindowUserPointer(window);
     v->win.width = width;
     v->win.height = height;
@@ -253,7 +290,8 @@ void View::framebuffer_size_callback(GLFWwindow* window, int width, int height) 
 }
 
 
-unsigned int View::InitQuad() {
+unsigned int View::init_quad()
+{
 	float vertices[] = {
 		 0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
 		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
@@ -291,22 +329,36 @@ unsigned int View::InitQuad() {
 	return VAO;
 }
 
-unsigned int View::LoadTexture(const std::string& file_path) {
+Texture View::load_texture(const std::string& file_path)
+{
 	stbi_set_flip_vertically_on_load(1);
 
 	//Texture
-	int width, height, num_channels;
-	unsigned char* data = stbi_load(file_path.c_str(), &width, &height, &num_channels, 0);
+	int width, height, n_channels;
+	unsigned char* data = stbi_load(file_path.c_str(), &width, &height, &n_channels, 0);
 	if (!data) {
 		printf("ERROR: failed to load image %s\n", file_path.c_str());
-		return -1;
+		return Texture{};
 	}
 
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+    GLenum format;
+    switch(n_channels) {
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+            break;
+        default:
+            format = GL_RGB;
+            break;
+    }
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	unsigned int tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
 	//Wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -317,5 +369,6 @@ unsigned int View::LoadTexture(const std::string& file_path) {
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
-	return texture;
+    Texture t = {tex, "NAMELESS"};
+	return t;
 }

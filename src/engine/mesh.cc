@@ -94,7 +94,7 @@ void Mesh::Draw(Shader& shader) {
 	//potential check if shader is already in use to avoid call
 	shader.use();
 	if(textures.size() > 0) {
-		glActiveTexture(GL_TEXTURE0);
+//		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0].id);
 	}
 

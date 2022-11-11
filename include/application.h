@@ -2,18 +2,18 @@
 #define APPLICATION_H
 
 #include "view.h"
-#include "model.h"
+#include "simulation.h"
 
 class Application {
 public:
-	Application();
-	int Init();
-	int Run();
-	void Shutdown();
+    Application();
+    int init();
+	int run();
+	void shutdown();
 
-	Model model;
 private:
-	View view;
+    Simulation sim;
+    View view;
 	bool running = false;
 };
 

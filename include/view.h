@@ -17,12 +17,15 @@
 #include "paths.h"
 #include "shader.h"
 #include "shapebuilder.h"
+#include "defs.h"
+#include "mesh.h"
 
 
 #define NUM_SHADERS 10
 #define CLAMP(f) f / 255.0f
 
 class Application;
+class Simulation;
 
 namespace Colors{
     const glm::vec4 Black   = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -52,45 +55,47 @@ class View {
 		DEFAULT,
 		GRID,
 		LIGHT,
-		TEXT
+		TEXT,
+        N_SHADERS
 	};
 
 	enum Textures {
-		CHARMAP = 0
+		CHARMAP = 0,
+        CRATE,
+        N_TEXTURES
 	};
 
 public:
+    Application* app;
+    Simulation* sim;
 	Window win;
 	FreeCamera camera;
 	Mouse mouse;
+
 	ShapeBuilder shapebuilder;
-	Shader shaders[NUM_SHADERS];
-	Application* app = nullptr;
 
-	unsigned int textures[3];
-
-	//graphics stuff
-	unsigned int VBO_cube;
+	Shader shaders[N_SHADERS];
+	Texture textures[N_TEXTURES];
 	unsigned int VAO;
-	unsigned int cube_count;
+    Mesh meshes[N_ENTITY_TYPES];
 
-;
 	View(const std::string& win_title, int win_width, int win_height);
 	View();
-	int Init(Application* parent);
-	int Render(double dt);
-	void RenderText(const std::string& text, float x, float y, float size, const glm::vec4& color);
+	int init(Application* app, Simulation* model);
+	int render(double dt);
+    void render_mesh(Mesh& mesh);
+	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
 
 private:
 
-	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-	static void scroll_callback(GLFWwindow* window, double xpos, double ypos);
-	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+	static void callback_mouse_move(GLFWwindow* window, double xpos, double ypos);
+	static void callback_scroll(GLFWwindow* window, double xpos, double ypos);
+	static void callback_mouse_button(GLFWwindow* window, int button, int action, int mods);
+	static void callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void callback_resize_framebuffer(GLFWwindow* window, int width, int height);
 
-	static unsigned int InitQuad();
-	static unsigned int LoadTexture(const std::string& file_path);
+	static unsigned int init_quad();
+	static Texture load_texture(const std::string& file_path);
 
 };
 #endif

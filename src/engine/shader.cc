@@ -1,9 +1,9 @@
 #include "shader.h"
 #include <exception>
 
-Shader::Shader(const char* vertex_path, const char* frag_path) {
-	vtx_path = vertex_path;
-	frg_path = frag_path;
+Shader::Shader(const char* vertex_path, const char* fragment_path) {
+	vert_path = vertex_path;
+	frag_path = fragment_path;
     load();
 }
 
@@ -17,11 +17,11 @@ bool Shader::load() {
 	vshader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fshader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	try {
-		vshader_file.open(vtx_path);
+		vshader_file.open(vert_path);
         if(!vshader_file.good()) {
             std::cout << "error on vertex shader file open" << std::endl;
         }
-		fshader_file.open(frg_path);
+		fshader_file.open(frag_path);
         if(!fshader_file.good()) {
             std::cout << "error on fragment shader file open" << std::endl;
         }
@@ -36,7 +36,7 @@ bool Shader::load() {
 		frag_code = fshader_stream.str();
 	}
 	catch (std::exception& e) {
-		std::cout << "[ERROR][SHADER] file read error" << std::endl;
+		std::cout << "[ERROR][SHADER] file read error"<< e.what() << std::endl;
 		return false;
 	}
 

@@ -66,6 +66,7 @@ class Mesh {
 		std::vector<Texture> textures;
 		Layout layout;
 
+        Mesh() = default;
 		Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds, std::vector<Texture> textures, Layout = default_layout);
 		Mesh(const float* verts, size_t num_verts, const unsigned int* indices, size_t num_indices, const Texture* tex, unsigned int num_tex, Layout = default_layout);
 		void Draw(Shader& shader);

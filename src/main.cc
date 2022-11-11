@@ -1,11 +1,9 @@
 #include "application.h"
-	
-Application app;
-
 
 int main(int argc, char** argv) {
-	app.Init();
-	app.Run();
+    Application app;
+    app.init();
+	app.run();
 	return 0;
 }
 

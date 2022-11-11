@@ -11,8 +11,8 @@
 
 class Shader {
 private:
-	std::string vtx_path;
-	std::string frg_path;
+	std::string vert_path;
+	std::string frag_path;
 
 public:
 	unsigned int id;

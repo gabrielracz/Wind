@@ -15,7 +15,7 @@ set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 set(HDRS
 	include/application.h
 	include/view.h
-	include/model.h
+		include/simulation.h
 	include/buffer.h
 	include/mesh.h
 	include/camera.h
@@ -23,19 +23,19 @@ set(HDRS
 	include/shader.h
 	include/shapebuilder.h
 	include/paths.h
-)
+        src/engine/entity.cc include/entity.h include/defs.h)
  
 set(SRCS
 	src/main.cc
 	src/engine/application.cc
 	src/engine/view.cc
-	src/engine/model.cc
+		src/engine/simulation.cc
 	src/engine/buffer.cc
 	src/engine/mesh.cc
 	src/engine/camera.cc
 	src/engine/shader.cc
 	src/engine/random.cc
-	src/engine/shapebuilder.cc)
+	src/engine/shapebuilder.cc src/engine/entity.cc include/entity.h)
 
 # Add path name to configuration file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/path_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/paths.h)
