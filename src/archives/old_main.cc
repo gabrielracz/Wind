@@ -44,7 +44,7 @@ glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 FreeCamera camera(camera_position, camera_front, camera_up);
 
-Shader shader(SHADER_DIRECTORY "/vertex_shader.glsl", SHADER_DIRECTORY "/fragment_shader.glsl");
+Shader shader(SHADER_DIRECTORY "/vertex_default.glsl", SHADER_DIRECTORY "/fragment_default.glsl");
 
 
 float aspect_ratio = 16.0f / 9.0f;
@@ -124,7 +124,7 @@ int main() {
 	shader.load();
 	shader.use();
 
-	Shader light_shader(SHADER_DIRECTORY"/vertex_shader.glsl", SHADER_DIRECTORY"/fragment_shader_light.glsl");
+	Shader light_shader(SHADER_DIRECTORY"/vertex_default.glsl", SHADER_DIRECTORY"/fragment_light.glsl");
 	light_shader.load();
 	light_shader.use();
 

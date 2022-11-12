@@ -18,6 +18,7 @@ int Application::run()
 	float last_time = glfwGetTime();
 	float delta_time = 0;
 	float acc_delta_time = 0;
+    int   fps_update_interval = 60;
 	unsigned int frame_counter = 0;
 	running = true;
 	while(running){
@@ -26,8 +27,8 @@ int Application::run()
 		current_time = glfwGetTime();
 		delta_time = current_time - last_time;
 		acc_delta_time += delta_time;
-		if(frame_counter % 60 == 0){
-//			std::cout << "FPS: " << std::to_string(60/acc_delta_time) << std::endl;
+		if(frame_counter % fps_update_interval == 0){
+            fps = (float)fps_update_interval/acc_delta_time;
 			acc_delta_time = 0;
 		}
 		last_time = current_time;

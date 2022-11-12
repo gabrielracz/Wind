@@ -144,7 +144,7 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	Shader shader("src/shaders/vertex_shader.glsl", "src/shaders/fragment_shader.glsl");
+	Shader shader("src/shaders/vertex_default.glsl", "src/shaders/fragment_default.glsl");
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
 	glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);

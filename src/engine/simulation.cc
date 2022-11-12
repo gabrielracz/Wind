@@ -6,7 +6,7 @@ const size_t N = 128;
 
 int Simulation::init() {
     mesh = Mesh();
-    plane = Entity(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), GLIDER);
+    plane = Entity(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), GLIDER);
 	return 0;
 }
 

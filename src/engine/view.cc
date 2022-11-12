@@ -4,6 +4,8 @@
 #include "simulation.h"
 #include <paths.h>
 
+#include <glm/gtx/vector_angle.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -28,11 +30,12 @@ int View::init(Application* parent, Simulation* model)
 {
     app = parent;
     sim = model;
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	//For MacOS:
+	//  For MacOS:
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	win.ptr = glfwCreateWindow(win.width, win.height, win.title.c_str(), nullptr, nullptr);
@@ -53,29 +56,25 @@ int View::init(Application* parent, Simulation* model)
 
     glewExperimental = GL_TRUE;
     glewInit();
-    glViewport(0, 0, win.width, win.height);		//Perspective projection matrix
+    glViewport(0, 0, win.width, win.height);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     //glfwSwapInterval(0);
 
-	//Shaders
-	shaders[DEFAULT] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
-					  SHADER_DIRECTORY"/fragment_shader.glsl");
-//
-//	shaders[GRID] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
-//					  SHADER_DIRECTORY"/fragment_shader.glsl");
-//
-//	shaders[LIGHT] = Shader(SHADER_DIRECTORY"/vertex_shader.glsl",
-//					  SHADER_DIRECTORY"/fragment_shader_light.glsl");
-
-	shaders[TEXT] = Shader(SHADER_DIRECTORY"/text_vertex.glsl",
-					  SHADER_DIRECTORY"/text_fragment.glsl");
+	//  Shaders
+	shaders[DEFAULT]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	shaders[TEXT]       = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
+    shaders[SH_LINE]    = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
 
     textures[CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
 	textures[CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
 
-	VAO = init_quad();
+    //  Raw OpenGL buffers
+    text_vao = init_quad();
+    line_vao = init_line();
+
+    //  3D meshes
     Layout layout = {
             {FLOAT3, "position"},
             {FLOAT2, "uv"},
@@ -104,16 +103,25 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::Black;
+    glm::vec4 clr = Colors::LGrey;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera.Update();
-    char fps_str[32];
-    std::sprintf(fps_str, "%.4f ms", dt);
     render_entity(sim->plane, Colors::Cream);
-//    render_mesh(meshes[CUBE]);
-    render_text(fps_str, -0.69, -0.875, 20, Colors::Cream);
+
+    // render hud overtop
+    char frame_time[32];
+    std::sprintf(frame_time, "%.4f ms", dt);
+    render_text(frame_time, -0.69, -0.875, 15, Colors::Magenta);
+
+    char fps[32];
+    std::sprintf(fps, "%.2f  fps", app->fps);
+    render_text(fps, -0.675, -0.78, 15, Colors::Magenta);
+
+    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue);
+    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red);
+    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
@@ -130,12 +138,12 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
 
     //do transformations
     glm::mat4 transform(1.0f);
+    transform = glm::translate(transform, ent.position);
     //pitch, yaw, roll to rotation matrix
     transform = glm::rotate(transform, ent.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     transform = glm::rotate(transform, ent.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     transform = glm::rotate(transform, ent.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
-    transform = glm::translate(transform, ent.position);
 
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
@@ -149,7 +157,7 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
 void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color)
 {
     glUseProgram(shaders[TEXT].id);
-    glBindVertexArray(VAO);
+    glBindVertexArray(text_vao);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -197,8 +205,44 @@ void View::render_text(const std::string& text, float x, float y, float size, co
     glDisable(GL_BLEND);
 }
 
+void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scale) {
+    glBindVertexArray(line_vao.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, line_vao.VBO);
+
+    float line_verts[] = {
+            0.0f, 0.0f, 0.0f,
+            line.x, line.y, line.z
+    };
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, 6*sizeof(float), line_verts);
+
+    Shader shader = shaders[SH_LINE];
+    shader.use();
+
+    glm::mat4 transform(1.0f);
+    //  There must be a better way... good enough for now
+//    glm::vec3 normline = glm::normalize(line);
+//    float pitch = glm::angle(normline, glm::vec3(1.0f, 0.0f, 0.0f));
+//    float yaw   = glm::angle(normline, glm::vec3(0.0f, 1.0f, 0.0f));
+//    float roll  = glm::angle(normline, glm::vec3(0.0f, 0.0f, 1.0f));
+//
+//    transform = glm::rotate(transform, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+//    transform = glm::rotate(transform, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+//    transform = glm::rotate(transform, roll, glm::vec3(0.0f, 0.0f, 1.0f));
+//
+    transform = glm::scale(transform, glm::vec3(scale));
+
+    shader.SetUniform4f(glm::vec4(color, 1.0f), "line_color");
+    shader.SetUniform4m(transform, "model");
+    shader.SetUniform4m(camera.view, "view");
+    shader.SetUniform4m(camera.projection, "projection");
+
+    glDrawArrays(GL_LINES, 0, 2);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 //  STATICS:
-static int cnt = 0;
 void View::callback_mouse_move(GLFWwindow* window, double xpos, double ypos)
 {
 	View* v = (View*) glfwGetWindowUserPointer(window);
@@ -344,6 +388,28 @@ unsigned int View::init_quad()
 
 	glBindVertexArray(0); 
 	return VAO;
+}
+
+VertexArray View::init_line() {
+    const float line_verts[] = {
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f
+    };
+    unsigned int VBO, VAO;
+    VertexArray arr;
+    glGenBuffers(1, &arr.VBO);
+    glGenVertexArrays(1, &arr.VAO);
+    glBindVertexArray(arr.VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, arr.VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(line_verts), line_verts, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    return arr;
 }
 
 Texture View::load_texture(const std::string& file_path)

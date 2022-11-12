@@ -54,7 +54,8 @@ bool Shader::load() {
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 	if (!success) {
 		glGetShaderInfoLog(vertex_shader, 512, NULL, infolog);
-		std::cout << "[ERROR][SHADER] vertex compilation failed\n" << infolog << std::endl;
+		std::cout << "[ERROR][SHADER] vertex compilation failed " << vert_path << ":\n"
+        << infolog << std::endl;
 		return false;
 	}
 

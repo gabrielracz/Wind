@@ -11,6 +11,7 @@ public:
 	int run();
 	void shutdown();
 
+    float fps = 0;
 private:
     Simulation sim;
     View view;
