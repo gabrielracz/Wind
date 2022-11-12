@@ -18,7 +18,7 @@ FreeCamera::FreeCamera(const glm::vec3& pos, const glm::vec3& front, const glm::
 
 	window_width = 800;
 	window_height = 450;
-	fov = PI/2.0f;
+	fov = glm::radians<float>(75);
 	aspect_ratio = (float)window_width / (float)window_height;
 
 

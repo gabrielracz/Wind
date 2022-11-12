@@ -83,6 +83,7 @@ int View::init(Application* parent, Simulation* model)
                         {}, 0,
                         &(textures[CRATE]), 1,
                         layout);
+    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider.obj");
 
 	glm::vec3 camera_position(0.0f, 2.5f, 5.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
@@ -108,6 +109,7 @@ int View::render(double dt)
     camera.Update();
     char fps_str[32];
     std::sprintf(fps_str, "%.4f ms", dt);
+    render_mesh(meshes[GLIDER]);
     render_mesh(meshes[CUBE]);
     render_text(fps_str, -0.69, -0.875, 20, Colors::Green);
 
@@ -116,10 +118,11 @@ int View::render(double dt)
 	return 0;
 }
 
-void View::render_mesh(Mesh& mesh)
+void View::render_mesh(Mesh& mesh, const glm::vec4& color)
 {
     Shader& shd = shaders[DEFAULT];
     shd.use();
+//    shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
     shd.SetUniform3f(glm::vec3(0.0f, 4.0f, 0.0f), "light_pos");
     shd.SetUniform4m(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), "model");

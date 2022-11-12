@@ -27,7 +27,7 @@ int Application::run()
 		delta_time = current_time - last_time;
 		acc_delta_time += delta_time;
 		if(frame_counter % 60 == 0){
-			std::cout << "FPS: " << std::to_string(60/acc_delta_time) << std::endl;
+//			std::cout << "FPS: " << std::to_string(60/acc_delta_time) << std::endl;
 			acc_delta_time = 0;
 		}
 		last_time = current_time;

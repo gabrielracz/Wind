@@ -1,4 +1,8 @@
 #include "mesh.h"
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <array>
 
 //Texture::Texture(unsigned int i, std::string t) {
 	//id = i;
@@ -17,6 +21,86 @@ Layout::Layout(std::initializer_list<LayoutEntry> ents)
 		}
 	}
 
+Mesh::Mesh(const std::string& obj_file_path)
+{
+
+    std::vector<std::array<float, 3>> verts;
+    std::vector<std::array<float ,2>> uvs;
+    std::vector<std::array<float, 3>> normals;
+
+    std::ifstream obj_file (obj_file_path);
+    std::string line;
+    unsigned int f_count = 0;
+    while(std::getline(obj_file, line)) {
+        std::stringstream l(line);
+        std::string word;
+        l >> word;
+        if(word == "v") {
+            std::array<float, 3> v = {};
+            l >> v[0];
+            l >> v[1];
+            l >> v[2];
+            verts.push_back(v);
+            std::cout << v[0] << " " << v[1] << " " << v[2] << std::endl;
+        }else if(word == "vt") {
+            std::array<float, 2> vt = {};
+            l >> vt[0];
+            l >> vt[1];
+            uvs.push_back(vt);
+        }else if(word == "vn") {
+            std::array<float, 3> n = {};
+            l >> n[0];
+            l >> n[1];
+            l >> n[2];
+            normals.push_back(n);
+        }else if(word == "f") {
+            int slash;
+            std::stringstream f(line);
+            char garbage;
+            f >> garbage;
+
+            for(int j = 0; j < 3; j++) {
+                std::string i1, i2, i3;
+                int v_ix, uv_ix, n_ix;
+                std::string e;
+                f >> e;
+
+                int pos = 0;
+                slash = e.find('/');
+                i1 = e.substr(pos, slash);
+                v_ix = std::stoi(i1) - 1;
+                pos = slash+1;
+
+                slash = e.find('/', pos);
+                i2 = e.substr(pos, slash);
+                uv_ix = std::stoi(i2) - 1;
+                pos = slash+1;
+
+                slash = e.find('/', pos);
+                i3 = e.substr(pos, slash);
+                n_ix = std::stoi(i3) - 1;
+
+                vertices.push_back(verts[v_ix][0]);
+                vertices.push_back(verts[v_ix][1]);
+                vertices.push_back(verts[v_ix][2]);
+                vertices.push_back(uvs[uv_ix][0]);
+                vertices.push_back(uvs[uv_ix][1]);
+                vertices.push_back(normals[n_ix][0]);
+                vertices.push_back(normals[n_ix][1]);
+                vertices.push_back(normals[n_ix][2]);
+                indices.push_back(f_count++);
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    layout = Layout({
+        {FLOAT3, "position"},
+        {FLOAT2, "uv"},
+        {FLOAT3, "normal"}
+    });
+    Setup();
+}
 //pass by value to copy the const shape arrays
 Mesh::Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds, std::vector<Texture> texts, Layout lay)
 	: indices(inds), textures(texts), layout(lay){
@@ -97,13 +181,14 @@ void Mesh::Draw(Shader& shader) {
 //		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0].id);
 	}
-
+//    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glBindVertexArray(VAO);
 	if(indices.size() > 0) {
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	} else {
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 	}
+//    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 	glBindVertexArray(0);
 
