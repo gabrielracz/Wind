@@ -1,7 +1,7 @@
 #include "application.h"
 
 Application::Application() 
-	: view("[]", 640, 420)
+	: view("[]", 1080, 720)
  {}
 
 int Application::init()

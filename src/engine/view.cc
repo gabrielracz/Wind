@@ -7,6 +7,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+bool View::DRAW_WIREFRAME = false;
+
 View::View(const std::string& win_title, int win_width, int win_height)
 {
 	win.title = win_title;
@@ -83,9 +85,9 @@ int View::init(Application* parent, Simulation* model)
                         {}, 0,
                         &(textures[CRATE]), 1,
                         layout);
-    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider.obj");
+    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
-	glm::vec3 camera_position(0.0f, 2.5f, 5.0f);
+	glm::vec3 camera_position(0.0f, 0.0f, 5.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 	glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 	camera = FreeCamera(camera_position, camera_front, camera_up);
@@ -102,32 +104,44 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::Grey;
+    glm::vec4 clr = Colors::Black;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera.Update();
     char fps_str[32];
     std::sprintf(fps_str, "%.4f ms", dt);
-    render_mesh(meshes[GLIDER]);
-    render_mesh(meshes[CUBE]);
-    render_text(fps_str, -0.69, -0.875, 20, Colors::Green);
+    render_entity(sim->plane, Colors::Cream);
+//    render_mesh(meshes[CUBE]);
+    render_text(fps_str, -0.69, -0.875, 20, Colors::Cream);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
 	return 0;
 }
 
-void View::render_mesh(Mesh& mesh, const glm::vec4& color)
+void View::render_entity(Entity& ent, const glm::vec4& color)
 {
     Shader& shd = shaders[DEFAULT];
     shd.use();
-//    shd.SetUniform4f(color, "base_color");
+    shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
-    shd.SetUniform3f(glm::vec3(0.0f, 4.0f, 0.0f), "light_pos");
-    shd.SetUniform4m(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), "model");
+    shd.SetUniform3f(glm::vec3(4.0f, 10.0f, 0.0f), "light_pos");
+
+    //do transformations
+    glm::mat4 transform(1.0f);
+    //pitch, yaw, roll to rotation matrix
+    transform = glm::rotate(transform, ent.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    transform = glm::rotate(transform, ent.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    transform = glm::rotate(transform, ent.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    transform = glm::translate(transform, ent.position);
+
+    shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
+
+    Mesh mesh = meshes[ent.id];
     mesh.Draw(shd);
 
 }
@@ -245,32 +259,31 @@ void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int acti
 		} else if (action == GLFW_RELEASE) {
 			cam->move_forward = false;
 		}
-	}
-	else if (key == GLFW_KEY_S) {
+	}else if (key == GLFW_KEY_S) {
 		if (action == GLFW_PRESS){
 			cam->move_back = true;
 		} else if (action == GLFW_RELEASE) {
 			cam->move_back = false;
 		}
-	}
-	else if (key == GLFW_KEY_A) {
-		if (action == GLFW_PRESS) {
-			cam->move_left = true;
-		} else if (action == GLFW_RELEASE) {
-			cam->move_left = false;
-		}
-	}
-	else if (key == GLFW_KEY_D) {
-		if (action == GLFW_PRESS) {
-			cam->move_right = true;
-		} else if (action == GLFW_RELEASE) {
-			cam->move_right = false;
-		}
-	}
-	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+	}else if (key == GLFW_KEY_A) {
+        if (action == GLFW_PRESS) {
+            cam->move_left = true;
+        } else if (action == GLFW_RELEASE) {
+            cam->move_left = false;
+        }
+    }else if (key == GLFW_KEY_D) {
+        if (action == GLFW_PRESS) {
+            cam->move_right = true;
+        } else if (action == GLFW_RELEASE) {
+            cam->move_right = false;
+        }
+    }else if (key == GLFW_KEY_L) {
+        if (action == GLFW_PRESS) {
+            View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
+        }
+    }else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
-	}
-	else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+	}else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		if (v->shaders[DEFAULT].load()) {
 			std::cout << "[LOG] shader loaded" << std::endl;
 		}
@@ -280,10 +293,6 @@ void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int acti
 	}
 	else if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-	else if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-		std::cout << "POS: " << glm::to_string(cam->position) << std::endl;
-		std::cout << "DIR: " << glm::to_string(cam->direction) << std::endl;
 	}
 
 }

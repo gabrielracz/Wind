@@ -19,6 +19,7 @@
 #include "shapebuilder.h"
 #include "defs.h"
 #include "mesh.h"
+#include "entity.h"
 
 
 #define NUM_SHADERS 10
@@ -30,13 +31,16 @@ class Simulation;
 namespace Colors {
     const glm::vec4 None    = {0.0f, 0.0f, 0.0f, 0.0f};
     const glm::vec4 Black   = {0.0f, 0.0f, 0.0f, 1.0f};
-    const glm::vec4 Grey    = {0.7f, 0.7f, 0.7f, 1.0f};
+    const glm::vec4 Grey    = {0.45f, 0.45f, 0.45f, 0.45f};
+    const glm::vec4 LGrey   = {0.7f, 0.7f, 0.7f, 1.0f};
+    const glm::vec4 Cream   = {0xFF/255.0f, 0xD7/255.0f, 0xAF/255.0f, 1.0f};
     const glm::vec4 White   = {1.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Magenta = {1.0f, 0.0f, 1.0f, 1.0f};
     const glm::vec4 Purple  = {CLAMP(0x67), CLAMP(0x5c), CLAMP(0xff), 1.0f };
     const glm::vec4 Red     = {1.0f, 0.0f, 0.0f, 1.0f};
     const glm::vec4 Green   = {0.0f, 1.0f, 0.0f, 1.0f};
     const glm::vec4 Blue    = {0.0f, 0.0f, 1.0f, 1.0f};
+    const glm::vec4 Stormy  = {41/255.0f, 0x4F/255.0f, 0x4F/255.0f, 1.0f};
 }
 
 class View {
@@ -86,8 +90,10 @@ public:
 	View();
 	int init(Application* app, Simulation* model);
 	int render(double dt);
-    void render_mesh(Mesh& mesh, const glm::vec4& color = Colors::None);
+    void render_entity(Entity& ent, const glm::vec4& color);
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
+
+    static bool DRAW_WIREFRAME;
 
 private:
 

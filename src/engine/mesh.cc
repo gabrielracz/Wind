@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "view.h"
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -21,6 +22,8 @@ Layout::Layout(std::initializer_list<LayoutEntry> ents)
 		}
 	}
 
+    //TODO: refactor all of the constructors
+
 Mesh::Mesh(const std::string& obj_file_path)
 {
 
@@ -41,7 +44,6 @@ Mesh::Mesh(const std::string& obj_file_path)
             l >> v[1];
             l >> v[2];
             verts.push_back(v);
-            std::cout << v[0] << " " << v[1] << " " << v[2] << std::endl;
         }else if(word == "vt") {
             std::array<float, 2> vt = {};
             l >> vt[0];
@@ -71,26 +73,30 @@ Mesh::Mesh(const std::string& obj_file_path)
                 v_ix = std::stoi(i1) - 1;
                 pos = slash+1;
 
+                glm::vec2 uv_selected(0.0f);
                 slash = e.find('/', pos);
-                i2 = e.substr(pos, slash);
-                uv_ix = std::stoi(i2) - 1;
+                if(slash != pos) {
+                    i2 = e.substr(pos, slash);
+                    uv_ix = std::stoi(i2) - 1;
+                    uv_selected = glm::vec2(uvs[uv_ix][0], uvs[uv_ix][1]);
+                }
                 pos = slash+1;
 
                 slash = e.find('/', pos);
                 i3 = e.substr(pos, slash);
                 n_ix = std::stoi(i3) - 1;
 
+
                 vertices.push_back(verts[v_ix][0]);
                 vertices.push_back(verts[v_ix][1]);
                 vertices.push_back(verts[v_ix][2]);
-                vertices.push_back(uvs[uv_ix][0]);
-                vertices.push_back(uvs[uv_ix][1]);
+                vertices.push_back(uv_selected.x);
+                vertices.push_back(uv_selected.y);
                 vertices.push_back(normals[n_ix][0]);
                 vertices.push_back(normals[n_ix][1]);
                 vertices.push_back(normals[n_ix][2]);
                 indices.push_back(f_count++);
             }
-            std::cout << std::endl;
         }
     }
 
@@ -181,17 +187,20 @@ void Mesh::Draw(Shader& shader) {
 //		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0].id);
 	}
-//    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glBindVertexArray(VAO);
+
+    if(View::DRAW_WIREFRAME)
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+    glBindVertexArray(VAO);
 	if(indices.size() > 0) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	} else {
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 	}
-//    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    if(View::DRAW_WIREFRAME)
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 	glBindVertexArray(0);
-
 }
 
 size_t LayoutEntry::size() {

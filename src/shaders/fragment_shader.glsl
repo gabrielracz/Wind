@@ -25,7 +25,7 @@ void main(){
 //	if(base_color.a < 0.9f)
 //		vec4 tex_color = texture(texture1, frag_uv);
 //		vec4 tex_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	vec4 tex_color = vec4(0x67/255.0f, 0x5c/255.0f, 0xff/255.0f, 1.0f);
+	vec4 tex_color = base_color;
 //	else
 //		vec4 tex_color = base_color;
 	vec3 result = (ambient + diffuse) * tex_color.rgb;
