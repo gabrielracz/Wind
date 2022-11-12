@@ -16,7 +16,6 @@ set(HDRS
 	include/application.h
 	include/view.h
 	include/simulation.h
-	include/buffer.h
 	include/mesh.h
 	include/camera.h
 	include/random.h
@@ -31,7 +30,6 @@ set(SRCS
 	src/engine/application.cc
 	src/engine/view.cc
 	src/engine/simulation.cc
-	src/engine/buffer.cc
 	src/engine/mesh.cc
 	src/engine/camera.cc
 	src/engine/shader.cc

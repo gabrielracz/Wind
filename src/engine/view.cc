@@ -60,7 +60,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //glfwSwapInterval(0);
+    glfwSwapInterval(0);
 
 	//  Shaders
 	shaders[DEFAULT]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
@@ -87,7 +87,7 @@ int View::init(Application* parent, Simulation* model)
     meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
 	glm::vec3 camera_position(0.0f, 0.0f, 5.0f);
-	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
+	glm::vec3 camera_front(0.0f, 0.0f, 1.0f);
 	glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 	camera = FreeCamera(camera_position, camera_front, camera_up);
 
@@ -119,9 +119,10 @@ int View::render(double dt)
     std::sprintf(fps, "%.2f  fps", app->fps);
     render_text(fps, -0.675, -0.78, 15, Colors::Magenta);
 
-    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue);
-    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red);
-    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green);
+    render_line(glm::vec3(0.575f, 0.575f, 0.575f), Colors::Magenta, 2.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue, 2.0f);
+    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red, 2.0f);
+    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green, 2.0f);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
@@ -205,7 +206,7 @@ void View::render_text(const std::string& text, float x, float y, float size, co
     glDisable(GL_BLEND);
 }
 
-void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scale) {
+void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scale, const glm::vec3& shift) {
     glBindVertexArray(line_vao.VAO);
     glBindBuffer(GL_ARRAY_BUFFER, line_vao.VBO);
 
@@ -220,16 +221,7 @@ void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scal
     shader.use();
 
     glm::mat4 transform(1.0f);
-    //  There must be a better way... good enough for now
-//    glm::vec3 normline = glm::normalize(line);
-//    float pitch = glm::angle(normline, glm::vec3(1.0f, 0.0f, 0.0f));
-//    float yaw   = glm::angle(normline, glm::vec3(0.0f, 1.0f, 0.0f));
-//    float roll  = glm::angle(normline, glm::vec3(0.0f, 0.0f, 1.0f));
-//
-//    transform = glm::rotate(transform, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
-//    transform = glm::rotate(transform, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-//    transform = glm::rotate(transform, roll, glm::vec3(0.0f, 0.0f, 1.0f));
-//
+    transform = glm::translate(transform, shift);
     transform = glm::scale(transform, glm::vec3(scale));
 
     shader.SetUniform4f(glm::vec4(color, 1.0f), "line_color");

@@ -102,7 +102,7 @@ public:
 	int render(double dt);
     void render_entity(Entity& ent, const glm::vec4& color);
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
-    void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f);
+    void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
 
     static bool DRAW_WIREFRAME;
 
