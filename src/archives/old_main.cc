@@ -12,7 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/common.hpp>
 #include "shader.h"
-#include "camera.h"
+#include "freecamera.h"
 #include "random.h"
 #include "mesh.h"
 #include "shapebuilder.h"

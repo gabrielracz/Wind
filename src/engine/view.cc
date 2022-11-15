@@ -1,10 +1,12 @@
 #include "view.h"
-#include "camera.h"
+#include "freecamera.h"
 #include "application.h"
 #include "simulation.h"
 #include <paths.h>
 
 #include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -60,7 +62,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glfwSwapInterval(0);
+//    glfwSwapInterval(0);
 
 	//  Shaders
 	shaders[DEFAULT]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
@@ -113,16 +115,15 @@ int View::render(double dt)
     // render hud overtop
     char frame_time[32];
     std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -0.69, -0.875, 15, Colors::Magenta);
+    render_text(frame_time, -0.69, -0.875, 15, Colors::Black);
 
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -0.675, -0.78, 15, Colors::Magenta);
+    render_text(fps, -0.675, -0.78, 15, Colors::Black);
 
-    render_line(glm::vec3(0.575f, 0.575f, 0.575f), Colors::Magenta, 2.0f, glm::vec3(1.0f, 1.0f, 0.0f));
-    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue, 2.0f);
-    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red, 2.0f);
-    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green, 2.0f);
+//    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue, 2.0f);
+//    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red, 2.0f);
+//    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green, 2.0f);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
@@ -131,21 +132,30 @@ int View::render(double dt)
 
 void View::render_entity(Entity& ent, const glm::vec4& color)
 {
+    float pitch = ent.rotation.x;
+    float yaw   = ent.rotation.y;
+    float roll  = ent.rotation.z;
+    glm::vec3 pointing(-sin(yaw), (sin(pitch)*cos(yaw)), -(cos(pitch)*cos(yaw)));
+
+    //do transformations
+    glm::mat4 transform(1.0f);
+    glm::mat4 translation(1.0f);
+    glm::mat4 rotation(1.0f);
+    //pitch, yaw, roll to rotation matrix
+    translation = glm::translate(glm::mat4(1.0f), ent.position);
+
+    render_line(ent.rotm[0], Colors::Blue, 5.0f, ent.position);
+    render_line(ent.rotm[1], Colors::Red, 5.0f, ent.position);
+    render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
+    rotation  = ent.rotm;
+
+    transform = translation * rotation;
+
     Shader& shd = shaders[DEFAULT];
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
     shd.SetUniform3f(glm::vec3(4.0f, 10.0f, 0.0f), "light_pos");
-
-    //do transformations
-    glm::mat4 transform(1.0f);
-    transform = glm::translate(transform, ent.position);
-    //pitch, yaw, roll to rotation matrix
-    transform = glm::rotate(transform, ent.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    transform = glm::rotate(transform, ent.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    transform = glm::rotate(transform, ent.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
@@ -178,10 +188,7 @@ void View::render_text(const std::string& text, float x, float y, float size, co
     glm::mat4 transformation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
     transformation_matrix = glm::scale(transformation_matrix, glm::vec3(sx, sy, 1.0f));
 
-
-
     glm::mat4 view_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(asp, 1.0f, 1.0f));
-//    glm::mat4 view_matrix(1.0f);
 
 	int loc_transform = glGetUniformLocation(shaders[TEXT].id, "transformation_matrix");
 	glUniformMatrix4fv(loc_transform, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
@@ -313,11 +320,43 @@ void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int acti
         } else if (action == GLFW_RELEASE) {
             cam->move_right = false;
         }
-    }else if (key == GLFW_KEY_L) {
+    }
+    else if (key == GLFW_KEY_L) {
         if (action == GLFW_PRESS) {
             View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
         }
-    }else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+    }
+    else if (key == GLFW_KEY_LEFT) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.y += 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_RIGHT) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.y -= 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_UP) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.x += 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_DOWN) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.x -= 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_PAGE_DOWN) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.z += 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_PAGE_UP) {
+        if (action == GLFW_PRESS) {
+            v->sim->plane.rot_velocity.z -= 0.005;
+        }
+    }
+    else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		if (v->shaders[DEFAULT].load()) {

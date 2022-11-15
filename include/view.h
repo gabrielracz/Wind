@@ -13,7 +13,7 @@
 #include <cstring>
 
 
-#include "camera.h"
+#include "freecamera.h"
 #include "paths.h"
 #include "shader.h"
 #include "shapebuilder.h"
