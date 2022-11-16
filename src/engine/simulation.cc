@@ -13,23 +13,11 @@ int Simulation::init() {
 int Simulation::update(double dt) {
     elapsed += dt;
 
-//    float p = plane.rotation.x;
-//    float y = plane.rotation.y;
-//    float r = plane.rotation.z;
-//
-//    // angular velocities about x, y, z aero nautical game: (z, x, y)
-//    float P = 0.00f;
-//    float Q = 0.000f;
-//    float R = 0.01f;
-//
-//    float roll_v = P + Q * sin(r) * tan(p) + R * cos(r) * tan(p);
-//    float pitch_v = Q * cos(r) - R * sin(r);
-//    float yaw_v = Q * sin(r) * 1.0f/cos(p) + R * cos(r)*1.0f/cos(p);
+    glm::vec4 gravity(0.0f, -9.8f, 0.0f, 0.0f);
+    plane.acceleration = glm::inverse(plane.rotm) * gravity;
 
-
-    plane.rotation.z = 0.01;
-    plane.rotation.x = 0.02;
+    plane.rot_acceleration.x = 5;
+    plane.rot_acceleration.y = 10;
     plane.update(dt);
-//    plane.rotation.z += sin(dt) * 0.2;
 	return 0;
 }

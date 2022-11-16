@@ -43,6 +43,8 @@ namespace Colors {
     const glm::vec4 Blue        = {0.0f, 0.0f, 1.0f, 1.0f};
     const glm::vec4 Stormy      = {41/255.0f, 0x4F/255.0f, 0x4F/255.0f, 1.0f};
     const glm::vec4 Amber       = {0xFF/255.0f, 0xB0/255.0f, 0.0f, 1.0f};
+    const glm::vec4 Pred        = {0xff/255.0f, 0x00/255.0f, 0x5d/255.0f, 0.0f};
+
 }
 
 typedef struct VertexArray {

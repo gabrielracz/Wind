@@ -110,7 +110,7 @@ int View::render(double dt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera.Update();
-    render_entity(sim->plane, Colors::Cream);
+    render_entity(sim->plane, Colors::Amber);
 
     // render hud overtop
     char frame_time[32];
@@ -120,10 +120,6 @@ int View::render(double dt)
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
     render_text(fps, -0.675, -0.78, 15, Colors::Black);
-
-//    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue, 2.0f);
-//    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red, 2.0f);
-//    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green, 2.0f);
 
 	glfwSwapBuffers(win.ptr);
 	glfwPollEvents();
@@ -147,6 +143,7 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     render_line(ent.rotm[0], Colors::Blue, 5.0f, ent.position);
     render_line(ent.rotm[1], Colors::Red, 5.0f, ent.position);
     render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
+    render_line(ent.acceleration, Colors::Magenta);
     rotation  = ent.rotm;
 
     transform = translation * rotation;
