@@ -2,11 +2,13 @@
 #include "freecamera.h"
 #include "application.h"
 #include "simulation.h"
+#include <GLFW/glfw3.h>
 #include <paths.h>
 
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <unordered_map>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -97,11 +99,68 @@ int View::init(Application* parent, Simulation* model)
 	mouse.xprev = (float) win.width / 2;
 	mouse.yprev = (float) win.height / 2;
 
+	init_controls();
+
+	return 0;
+}
+
+int View::init_controls() {
+    key_controls.insert({GLFW_KEY_I, false});
+	key_controls.insert({GLFW_KEY_K, false});
+	key_controls.insert({GLFW_KEY_L, false});
+	key_controls.insert({GLFW_KEY_J, false});
+	key_controls.insert({GLFW_KEY_U, false});
+	key_controls.insert({GLFW_KEY_P, false});
+
+	key_controls.insert({GLFW_KEY_W, false});
+	key_controls.insert({GLFW_KEY_A, false});
+	key_controls.insert({GLFW_KEY_S, false});
+	key_controls.insert({GLFW_KEY_D, false});
+
+	key_controls.insert({GLFW_KEY_RIGHT_BRACKET, false});
+	key_controls.insert({GLFW_KEY_ESCAPE, false});
+	return 0;
+}
+
+int View::check_controls() {
+	if(key_controls[GLFW_KEY_I]) {
+		sim->plane.rot_acceleration.x = -10;
+	}
+	if(key_controls[GLFW_KEY_K]) {
+		sim->plane.rot_acceleration.x = 10;
+	}
+	if(key_controls[GLFW_KEY_L]) {
+		sim->plane.rot_acceleration.z = -10;
+	}
+	if(key_controls[GLFW_KEY_J]) {
+		sim->plane.rot_acceleration.z = 10;
+	}
+	if(key_controls[GLFW_KEY_U]) {
+		sim->plane.rot_acceleration.y = 10;
+	}
+	if(key_controls[GLFW_KEY_P]) {
+		sim->plane.rot_acceleration.y = -10;
+	}
+
+	if(key_controls[GLFW_KEY_ESCAPE]) {
+		glfwSetWindowShouldClose(win.ptr, true);
+	}
+	camera.move_forward = key_controls[GLFW_KEY_W];
+	camera.move_left = key_controls[GLFW_KEY_A];
+    camera.move_right = key_controls[GLFW_KEY_D];
+	camera.move_back = key_controls[GLFW_KEY_S];
+	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
+		View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
+		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
+	}
 	return 0;
 }
 
 int View::render(double dt)
 {
+	glfwPollEvents();
+	check_controls();
+
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
@@ -122,7 +181,6 @@ int View::render(double dt)
     render_text(fps, -0.675, -0.78, 15, Colors::Black);
 
 	glfwSwapBuffers(win.ptr);
-	glfwPollEvents();
 	return 0;
 }
 
@@ -287,84 +345,19 @@ void View::callback_mouse_button(GLFWwindow* window, int button, int action, int
 	}
 }
 
+
+
 void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	View* v = (View*) glfwGetWindowUserPointer(window);
 	FreeCamera* cam = &v->camera;
 
+	std::cout << key << std::endl;
 
-	if (key == GLFW_KEY_W) {
-		if (action == GLFW_PRESS) {
-			cam->move_forward = true;
-		} else if (action == GLFW_RELEASE) {
-			cam->move_forward = false;
-		}
-	}else if (key == GLFW_KEY_S) {
-		if (action == GLFW_PRESS){
-			cam->move_back = true;
-		} else if (action == GLFW_RELEASE) {
-			cam->move_back = false;
-		}
-	}else if (key == GLFW_KEY_A) {
-        if (action == GLFW_PRESS) {
-            cam->move_left = true;
-        } else if (action == GLFW_RELEASE) {
-            cam->move_left = false;
-        }
-    }else if (key == GLFW_KEY_D) {
-        if (action == GLFW_PRESS) {
-            cam->move_right = true;
-        } else if (action == GLFW_RELEASE) {
-            cam->move_right = false;
-        }
-    }
-    else if (key == GLFW_KEY_L) {
-        if (action == GLFW_PRESS) {
-            View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
-        }
-    }
-    else if (key == GLFW_KEY_LEFT) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.y += 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_RIGHT) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.y -= 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_UP) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.x += 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_DOWN) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.x -= 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_PAGE_DOWN) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.z += 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_PAGE_UP) {
-        if (action == GLFW_PRESS) {
-            v->sim->plane.rot_velocity.z -= 0.005;
-        }
-    }
-    else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
-	}else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-		if (v->shaders[DEFAULT].load()) {
-			std::cout << "[LOG] shader loaded" << std::endl;
-		}
-	}
-	else if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-	else if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if(action == GLFW_PRESS) {
+		v->key_controls[key] = true;
+	}else if(action == GLFW_RELEASE) {
+		v->key_controls[key] = false;
 	}
 
 }

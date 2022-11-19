@@ -11,6 +11,8 @@
 #include <glm/common.hpp>
 
 #include <cstring>
+#include <unordered_set>
+#include <unordered_map>
 
 
 #include "freecamera.h"
@@ -83,6 +85,13 @@ class View {
         N_TEXTURES
 	};
 
+    typedef struct ControlKey {
+        int key_code;
+        bool hold;
+        ControlKey(int key, int hld)
+        : key_code(key), hold(hld){}
+    }ControlKey;
+
 public:
     Application* app;
     Simulation* sim;
@@ -90,7 +99,10 @@ public:
 	FreeCamera camera;
 	Mouse mouse;
 
+
 	ShapeBuilder shapebuilder;
+
+    std::unordered_map<int, bool> key_controls;
 
 	Shader shaders[N_SHADERS];
 	Texture textures[N_TEXTURES];
@@ -101,6 +113,8 @@ public:
 	View(const std::string& win_title, int win_width, int win_height);
 	View();
 	int init(Application* app, Simulation* model);
+    int init_controls();
+    int check_controls();
 	int render(double dt);
     void render_entity(Entity& ent, const glm::vec4& color);
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
