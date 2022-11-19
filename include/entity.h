@@ -24,9 +24,9 @@ public:
    //https://jsbsim.sourceforge.net/MassProps.html
     float mass = 396.44f;
     glm::mat3 inertia = glm::mat3(
-            1375.0f,   0.0f,   68.0f,
-               0.0f, 870.0f,    0.0f,
-              68.0f,   0.0f, 2214.0f
+             870.0f,   68.0f,   0.0f,
+               68.0f, 2214.0f,   0.0f,
+              0.0f,   0.0f, 1375.0f
             );
     float chord = 1.0f;
     float span  = 14.0f;
