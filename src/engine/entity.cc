@@ -11,7 +11,7 @@ void Entity::update(float dt) {
 
 
     //integrate accel, use moment of intertia
-    rot_velocity += glm::inverse(inertia) * rot_acceleration * dt;
+    rot_velocity += glm::inverse(inertia) * glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
     rot_velocity *= 0.99;
 
     float theta = glm::length(rot_velocity);

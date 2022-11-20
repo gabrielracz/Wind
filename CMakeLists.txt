@@ -21,7 +21,7 @@ set(HDRS
 	include/freecamera.h
 	include/random.h
 	include/shader.h
-	include/shapebuilder.h
+	include/shapes.h
 	include/paths.h
     include/entity.h
     include/defs.h)
@@ -36,7 +36,7 @@ set(SRCS
 	src/engine/freecamera.cc
 	src/engine/shader.cc
 	src/engine/random.cc
-	src/engine/shapebuilder.cc
+	src/engine/shapes.cc
     src/engine/entity.cc)
 
 # Add path name to configuration file

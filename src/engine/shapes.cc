@@ -1,6 +1,6 @@
-#include "shapebuilder.h"
+#include "shapes.h"
 //===============UVSPHERE=====================
-void ShapeBuilder::GenerateSphere(int segments, float radius, float** vertices, unsigned int** indices, unsigned int* num_vertices, unsigned int* num_indices) {
+void Shapes::GenerateSphere(int segments, float radius, float** vertices, unsigned int** indices, unsigned int* num_vertices, unsigned int* num_indices) {
 	*num_vertices = (segments+1) * (segments +1) * 5;
 	*vertices = new float[*num_vertices];
 

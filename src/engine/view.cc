@@ -1,6 +1,8 @@
 #include "view.h"
 #include "freecamera.h"
 #include "application.h"
+#include "mesh.h"
+#include "shapes.h"
 #include "simulation.h"
 #include <GLFW/glfw3.h>
 #include <paths.h>
@@ -67,12 +69,31 @@ int View::init(Application* parent, Simulation* model)
 //    glfwSwapInterval(0);
 
 	//  Shaders
-	shaders[DEFAULT]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
-	shaders[TEXT]       = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
-    shaders[SH_LINE]    = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
+	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
+    shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
+    shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox.glsl");
 
-    textures[CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
-	textures[CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
+
+    textures[T_CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
+	textures[T_CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
+
+
+    //right, left, top, bottom, front, back
+#define SKYBOX_NAME "wrath"
+    std::vector<std::string> skybox_faces({
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_ft.jpg",
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_bk.jpg",
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_up.jpg",
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_dn.jpg",
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_rt.jpg",
+          RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_lf.jpg"
+    });
+    stbi_set_flip_vertically_on_load(0);
+    textures[T_SKYBOX]   = load_cubemap(skybox_faces);
+    skybox_vao = init_cube();
+
+	
 
     //  Raw OpenGL buffers
     text_vao = init_quad();
@@ -84,9 +105,9 @@ int View::init(Application* parent, Simulation* model)
             {FLOAT2, "uv"},
             {FLOAT3, "normal"}
     };
-    meshes[CUBE] = Mesh(ShapeBuilder::cube_vertices_tn, sizeof(ShapeBuilder::cube_vertices_tn)/sizeof(float),
+    meshes[CUBE] = Mesh(Shapes::cube_vertices_tn, sizeof(Shapes::cube_vertices_tn)/sizeof(float),
                         {}, 0,
-                        &(textures[CRATE]), 1,
+                        &(textures[T_CRATE]), 1,
                         layout);
     meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
@@ -110,12 +131,15 @@ int View::init_controls() {
 	key_controls.insert({GLFW_KEY_L, false});
 	key_controls.insert({GLFW_KEY_J, false});
 	key_controls.insert({GLFW_KEY_U, false});
-	key_controls.insert({GLFW_KEY_P, false});
+	key_controls.insert({GLFW_KEY_O, false});
 
 	key_controls.insert({GLFW_KEY_W, false});
 	key_controls.insert({GLFW_KEY_A, false});
 	key_controls.insert({GLFW_KEY_S, false});
 	key_controls.insert({GLFW_KEY_D, false});
+    key_controls.insert({GLFW_KEY_E, false});
+    key_controls.insert({GLFW_KEY_Q, false});
+
 
 	key_controls.insert({GLFW_KEY_RIGHT_BRACKET, false});
 	key_controls.insert({GLFW_KEY_ESCAPE, false});
@@ -130,25 +154,26 @@ int View::check_controls() {
 		sim->plane.rot_acceleration.x = 10;
 	}
 	if(key_controls[GLFW_KEY_L]) {
-		sim->plane.rot_acceleration.z = -10;
+		sim->plane.rot_acceleration.z = 10;
 	}
 	if(key_controls[GLFW_KEY_J]) {
-		sim->plane.rot_acceleration.z = 10;
+		sim->plane.rot_acceleration.z = -10;
 	}
 	if(key_controls[GLFW_KEY_U]) {
 		sim->plane.rot_acceleration.y = 10;
 	}
-	if(key_controls[GLFW_KEY_P]) {
+	if(key_controls[GLFW_KEY_O]) {
 		sim->plane.rot_acceleration.y = -10;
 	}
 
 	if(key_controls[GLFW_KEY_ESCAPE]) {
 		glfwSetWindowShouldClose(win.ptr, true);
 	}
+
 	camera.move_forward = key_controls[GLFW_KEY_W];
-	camera.move_left = key_controls[GLFW_KEY_A];
+    camera.move_back = key_controls[GLFW_KEY_S];
+    camera.move_left = key_controls[GLFW_KEY_A];
     camera.move_right = key_controls[GLFW_KEY_D];
-	camera.move_back = key_controls[GLFW_KEY_S];
 	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
 		View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
 		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
@@ -164,21 +189,27 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::LGrey;
+    glm::vec4 clr = Colors::Black;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     camera.Update();
-    render_entity(sim->plane, Colors::Amber);
+
+    render_skybox();
+
+    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue);
+    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red);
+    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green);
+
+    render_entity(sim->plane, Colors::LGrey);
 
     // render hud overtop
     char frame_time[32];
     std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -0.69, -0.875, 15, Colors::Black);
+    render_text(frame_time, -0.79, 0.9, 12, Colors::Green);
 
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -0.675, -0.78, 15, Colors::Black);
+    render_text(fps, -0.775, 0.8, 12, Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -186,12 +217,6 @@ int View::render(double dt)
 
 void View::render_entity(Entity& ent, const glm::vec4& color)
 {
-    float pitch = ent.rotation.x;
-    float yaw   = ent.rotation.y;
-    float roll  = ent.rotation.z;
-    glm::vec3 pointing(-sin(yaw), (sin(pitch)*cos(yaw)), -(cos(pitch)*cos(yaw)));
-
-    //do transformations
     glm::mat4 transform(1.0f);
     glm::mat4 translation(1.0f);
     glm::mat4 rotation(1.0f);
@@ -203,10 +228,9 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
     render_line(ent.acceleration, Colors::Magenta);
     rotation  = ent.rotm;
-
     transform = translation * rotation;
 
-    Shader& shd = shaders[DEFAULT];
+    Shader& shd = shaders[S_DEFAULT];
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
@@ -220,20 +244,32 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
 
 }
 
+void View::render_skybox() {
+    glDepthMask(false);
+    Shader& shd = shaders[S_SKYBOX];
+    shd.use();
+    shd.SetUniform4m(glm::scale(glm::mat4(1.0f), glm::vec3(300.0f)), "transformation");
+    shd.SetUniform4m(camera.view, "view");
+    shd.SetUniform4m(camera.projection, "projection");
+    glBindVertexArray(skybox_vao);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textures[T_SKYBOX].id);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthMask(true);
+}
+
 void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color)
 {
-    glUseProgram(shaders[TEXT].id);
+    Shader& shd = shaders[S_TEXT];
+    shd.use();
     glBindVertexArray(text_vao);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textures[CHARMAP].id);
+	glBindTexture(GL_TEXTURE_2D, textures[T_CHARMAP].id);
 
-	int len = text.size();
-	int loc_text_len = glGetUniformLocation(shaders[TEXT].id, "text_len");
-	glUniform1i(loc_text_len, len);
+    int len = text.size();
+    shd.SetUniform1i(len, "text_len");
 
     float width = len*8/15.0f*(size);
 	float sx = width;
@@ -245,13 +281,12 @@ void View::render_text(const std::string& text, float x, float y, float size, co
 
     glm::mat4 view_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(asp, 1.0f, 1.0f));
 
-	int loc_transform = glGetUniformLocation(shaders[TEXT].id, "transformation_matrix");
-	glUniformMatrix4fv(loc_transform, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
+    shd.SetUniform4m(transformation_matrix, "transformation_matrix");
 
     float w = (float)win.width/2.0f;
     float h = (float)win.height/2.0f;
-    shaders[TEXT].SetUniform4m(glm::ortho<float>(-w, w, -h, h, -1.0f, 1.0f), "projection_matrix");
-    shaders[TEXT].SetUniform4f(color, "text_color");
+    shd.SetUniform4m(glm::ortho<float>(-w, w, -h, h, -1.0f, 1.0f), "projection_matrix");
+    shd.SetUniform4f(color, "text_color");
 
 	// Set the text data
 	assert(512 > len);
@@ -260,8 +295,7 @@ void View::render_text(const std::string& text, float x, float y, float size, co
 		data[i] = text[i];
 	}
 
-	int loc_content = glGetUniformLocation(shaders[TEXT].id, "text_content");
-	glUniform1iv(loc_content, len, data);
+    shd.SetUniform1iv(data, len, "text_content");
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -279,7 +313,7 @@ void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scal
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, 6*sizeof(float), line_verts);
 
-    Shader shader = shaders[SH_LINE];
+    Shader shader = shaders[S_LINE];
     shader.use();
 
     glm::mat4 transform(1.0f);
@@ -350,9 +384,6 @@ void View::callback_mouse_button(GLFWwindow* window, int button, int action, int
 void View::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	View* v = (View*) glfwGetWindowUserPointer(window);
-	FreeCamera* cam = &v->camera;
-
-	std::cout << key << std::endl;
 
 	if(action == GLFW_PRESS) {
 		v->key_controls[key] = true;
@@ -476,3 +507,47 @@ Texture View::load_texture(const std::string& file_path)
     Texture t = {tex, "NAMELESS"};
 	return t;
 }
+
+Texture View::load_cubemap(std::vector<std::string>& faces) {
+	unsigned int tex_id;
+	glGenTextures(1, &tex_id);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id);
+
+	int w, h, n_channels;
+	for(int i = 0; i < faces.size(); i++) {
+		unsigned char* data = stbi_load(faces[i].c_str(), &w, &h, &n_channels, 0);
+		if(data) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+					0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data );
+			stbi_image_free(data);
+		}else {
+			std::cout << "[ERROR] Cube map " << faces[i] << " failed to load" << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+
+	return {tex_id, "skybox"};
+}
+
+unsigned int View::init_cube() {
+	unsigned int VBO, VAO;
+	glGenBuffers(1, &VBO);
+	glGenVertexArrays(1, &VAO);
+
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Shapes::cube_vertices), Shapes::cube_vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*3, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	return VAO;
+};

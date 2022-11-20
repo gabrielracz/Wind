@@ -15,7 +15,7 @@
 #include "freecamera.h"
 #include "random.h"
 #include "mesh.h"
-#include "shapebuilder.h"
+#include "shapes.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "util/stb_image.h"
 #include <vector>
@@ -26,7 +26,7 @@
 
 #include <unistd.h>
 
-#include "shapebuilder.h"
+#include "shapes.h"
 
 #define CLM(float) float / 255.0f
 
@@ -88,8 +88,7 @@ int main() {
 	rng.setrange(-10, 10);
 	std::vector<glm::vec3> cube_positions;
 
-	ShapeBuilder shp;
-	shp.GenerateSphere(10, 2, &verts, &inds, &num_verts, &num_inds);
+	Shapes::GenerateSphere(10, 2, &verts, &inds, &num_verts, &num_inds);
 
 	Texture t = {texture, "cool"};
 	Layout layout = {

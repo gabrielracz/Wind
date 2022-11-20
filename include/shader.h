@@ -29,6 +29,9 @@ public:
 	void SetUniform3m(const glm::mat3& u, const std::string& name);
 	void SetUniform4m(const glm::mat4& u, const std::string& name);
 
+    void SetUniform1i(int i, const std::string& name);
+    void SetUniform1iv(int* v, int len, const std::string& name);
+
 	void SetBool(const std::string& name, bool value) const;
 	void SetInt(const std::string& name, int value) const;
 	void SetFloat(const std::string& name, float value) const;

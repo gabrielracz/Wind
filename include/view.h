@@ -18,7 +18,7 @@
 #include "freecamera.h"
 #include "paths.h"
 #include "shader.h"
-#include "shapebuilder.h"
+#include "shapes.h"
 #include "defs.h"
 #include "mesh.h"
 #include "entity.h"
@@ -70,18 +70,20 @@ class View {
 		double xprev, yprev;
 	} Mouse;
 
-	enum ShaderPrograms {
-		DEFAULT,
-		GRID,
-		LIGHT,
-		TEXT,
-        SH_LINE,
+	enum Shaders {
+		S_DEFAULT,
+		S_GRID,
+		S_LIGHT,
+		S_TEXT,
+        S_LINE,
+        S_SKYBOX,
         N_SHADERS
 	};
 
 	enum Textures {
-		CHARMAP = 0,
-        CRATE,
+		T_CHARMAP = 0,
+        T_CRATE,
+		T_SKYBOX,
         N_TEXTURES
 	};
 
@@ -99,14 +101,13 @@ public:
 	FreeCamera camera;
 	Mouse mouse;
 
-
-	ShapeBuilder shapebuilder;
-
     std::unordered_map<int, bool> key_controls;
 
 	Shader shaders[N_SHADERS];
 	Texture textures[N_TEXTURES];
     unsigned int text_vao;
+	unsigned int skybox_tex;
+	unsigned int skybox_vao;
     VertexArray line_vao;
     Mesh meshes[N_ENTITY_TYPES];
 
@@ -117,6 +118,7 @@ public:
     int check_controls();
 	int render(double dt);
     void render_entity(Entity& ent, const glm::vec4& color);
+    void render_skybox();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
     void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
 
@@ -131,8 +133,9 @@ private:
 	static void callback_resize_framebuffer(GLFWwindow* window, int width, int height);
 
 	static unsigned int init_quad();
+    static unsigned int init_cube();
     static VertexArray init_line();
 	static Texture load_texture(const std::string& file_path);
-
+	static Texture load_cubemap(std::vector<std::string>& faces);
 };
 #endif

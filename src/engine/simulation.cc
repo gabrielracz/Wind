@@ -7,6 +7,7 @@ const size_t N = 128;
 int Simulation::init() {
     mesh = Mesh();
     plane = Entity(glm::vec3(3.0f, 0.0f, 0.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
+    plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
 	return 0;
 }
 
