@@ -111,8 +111,8 @@ int View::init(Application* parent, Simulation* model)
                         layout);
     meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
-	glm::vec3 camera_position(0.0f, 0.0f, 5.0f);
-	glm::vec3 camera_front(0.0f, 0.0f, 1.0f);
+	glm::vec3 camera_position(0.0f, 1.0f, -1.0f);
+	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 	glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 	camera = FreeCamera(camera_position, camera_front, camera_up);
 
@@ -196,20 +196,16 @@ int View::render(double dt)
 
     render_skybox();
 
-    render_line(glm::vec3(1.0f, 0.0f, 0.0f), Colors::Blue);
-    render_line(glm::vec3(0.0f, 1.0f, 0.0f), Colors::Red);
-    render_line(glm::vec3(0.0f, 0.0f, 1.0f), Colors::Green);
-
     render_entity(sim->plane, Colors::LGrey);
 
     // render hud overtop
     char frame_time[32];
     std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -0.79, 0.9, 12, Colors::Green);
+    render_text(frame_time, -0.79, 0.9, 15, Colors::Green);
 
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -0.775, 0.8, 12, Colors::Green);
+    render_text(fps, -0.775, 0.8, 15, Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -223,12 +219,35 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     //pitch, yaw, roll to rotation matrix
     translation = glm::translate(glm::mat4(1.0f), ent.position);
 
-    render_line(ent.rotm[0], Colors::Blue, 5.0f, ent.position);
-    render_line(ent.rotm[1], Colors::Red, 5.0f, ent.position);
-    render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
-    render_line(ent.acceleration, Colors::Magenta);
+    //render_line(ent.rotm[0], Colors::Blue, 5.0f, ent.position);
+    //render_line(ent.rotm[1], Colors::Red, 5.0f, ent.position);
+    //render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
+//    render_line(ent.acceleration, Colors::Magenta);
+
+
     rotation  = ent.rotm;
     transform = translation * rotation;
+
+    glm::mat4 lwing_transform = glm::translate(glm::mat4(1.0f), ent.lwing.pos) * ent.lwing.rotm;
+    glm::vec3 lwing_norm = transform * lwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec3 lwing_pos = transform * glm::vec4(ent.lwing.pos + glm::vec3(ent.lwing.span*ent.lwing.lift_distribution, 0.1f, 0.0f), 1.0f);
+    render_line(lwing_norm, Colors::Amber, 90.0f, lwing_pos);
+
+    glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
+    glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec3 rwing_pos = transform * glm::vec4(ent.rwing.pos + glm::vec3(ent.rwing.span*ent.rwing.lift_distribution, ent.rwing.span*sin(ent.rwing.dihedral), 0.0f), 1.0f);
+    render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
+
+    glm::vec3 facing = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.facing, 1.0f);
+    render_line(facing, Colors::Blue, 10.0f, ent.position);
+
+    glm::vec3 relwind = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.rel, 1.0f);
+    render_line(relwind, Colors::Blue, 10.0f, ent.position);
+
+    glm::mat4 elevator_transform = glm::translate(glm::mat4(1.0f), ent.elevator.pos) * ent.elevator.rotm;
+    glm::vec3 elevator_norm = transform * elevator_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec3 elevator_pos = transform * glm::vec4(ent.elevator.pos + glm::vec3(ent.elevator.span*ent.elevator.lift_distribution, ent.elevator.span*sin(ent.elevator.dihedral), 0.0f), 1.0f);
+    render_line(elevator_norm, Colors::Amber, 90.0f, elevator_pos);
 
     Shader& shd = shaders[S_DEFAULT];
     shd.use();

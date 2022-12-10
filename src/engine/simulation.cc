@@ -8,6 +8,7 @@ int Simulation::init() {
     mesh = Mesh();
     plane = Entity(glm::vec3(3.0f, 0.0f, 0.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
     plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
+	plane.velocity = glm::vec3(0.0f, 0.0f, 28.0f);
 	return 0;
 }
 
@@ -16,6 +17,8 @@ int Simulation::update(double dt) {
 
     glm::vec4 gravity(0.0f, -9.8f, 0.0f, 0.0f);
     plane.acceleration = glm::inverse(plane.rotm) * gravity;
+    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+
     plane.update(dt);
 	return 0;
 }

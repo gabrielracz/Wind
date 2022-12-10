@@ -5,6 +5,25 @@
 #include <glm/glm.hpp>
 #include "defs.h"
 
+typedef struct Wing {
+    glm::vec3 pos;
+    float span;
+    float chord;
+    float aspect_ratio;
+    float pitch;
+    float area;
+    float lift_distribution;
+    float dihedral;
+    float stall_angle = 16.0f;
+    glm::vec3 facing;
+    glm::vec3 rel;
+    glm::mat4 rotm = glm::mat4(1.0f);
+
+    Wing() = default;
+    Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.4f);
+    glm::vec3 solve(const glm::vec3& air);
+}Wing;
+
 class Entity {
 public:
 
@@ -24,12 +43,20 @@ public:
    //https://jsbsim.sourceforge.net/MassProps.html
     float mass = 396.44f;
     glm::mat3 inertia = glm::mat3(
-             870.0f,   68.0f,   0.0f,
-               68.0f, 2214.0f,   0.0f,
+             870.0f,   0.0f,   0.0f,
+               0.0f, 2214.0f,   0.0f,
               0.0f,   0.0f, 1375.0f
             );
-    float chord = 1.0f;
-    float span  = 14.0f;
+    // glm::mat3 inertia = glm::mat3(
+    //          870.0f,   68.0f,   0.0f,
+    //            68.0f, 2214.0f,   0.0f,
+    //           0.0f,   0.0f, 1375.0f
+    //         );
+
+    Wing rwing;
+    Wing lwing;
+    Wing elevator;
+    Wing rudder;
 
     //std::vector<Wing> wings;
     EntityID id;
