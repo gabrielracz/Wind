@@ -9,18 +9,26 @@ typedef struct Wing {
     glm::vec3 pos;
     float span;
     float chord;
-    float aspect_ratio;
     float pitch;
     float area;
     float lift_distribution;
     float dihedral;
-    float stall_angle = 16.0f;
+    float stall_angle = 16.0f * M_PI/180.0f;
+    float angle_of_attack;
+    float flow_velocity;
+
+    glm::vec3 net_force;
     glm::vec3 facing;
     glm::vec3 rel;
     glm::mat4 rotm = glm::mat4(1.0f);
 
     Wing() = default;
     Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.4f);
+    float coefficient_lift(float aoa);
+    float coefficient_drag(float aoa);
+    void solve_aoa(const glm::vec3& relwind);
+    glm::vec3 solve_lift();
+    glm::vec3 solve_drag();
     glm::vec3 solve(const glm::vec3& air);
 }Wing;
 

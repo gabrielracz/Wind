@@ -233,16 +233,13 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     glm::vec3 lwing_pos = transform * glm::vec4(ent.lwing.pos + glm::vec3(ent.lwing.span*ent.lwing.lift_distribution, 0.1f, 0.0f), 1.0f);
     render_line(lwing_norm, Colors::Amber, 90.0f, lwing_pos);
 
-    glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
-    glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    glm::vec3 rwing_pos = transform * glm::vec4(ent.rwing.pos + glm::vec3(ent.rwing.span*ent.rwing.lift_distribution, ent.rwing.span*sin(ent.rwing.dihedral), 0.0f), 1.0f);
-    render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
+    // glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
+    // glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    // glm::vec3 rwing_pos = transform * glm::vec4(ent.rwing.pos + glm::vec3(ent.rwing.span*ent.rwing.lift_distribution, ent.rwing.span*sin(ent.rwing.dihedral), 0.0f), 1.0f);
+    // render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
 
-    glm::vec3 facing = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.facing, 1.0f);
-    render_line(facing, Colors::Blue, 10.0f, ent.position);
-
-    glm::vec3 relwind = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.rel, 1.0f);
-    render_line(relwind, Colors::Blue, 10.0f, ent.position);
+    glm::vec3 relwind = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.net_force, 1.0f);
+    render_line(relwind, Colors::Blue, 1.0f, ent.position);
 
     glm::mat4 elevator_transform = glm::translate(glm::mat4(1.0f), ent.elevator.pos) * ent.elevator.rotm;
     glm::vec3 elevator_norm = transform * elevator_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
