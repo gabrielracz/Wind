@@ -23,6 +23,7 @@ typedef struct Wing {
     glm::vec3 facing;
     glm::vec3 rel;
     glm::mat4 rotm = glm::mat4(1.0f);
+    glm::vec3 center_of_pressure;
 
     Wing() = default;
     Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.4f);

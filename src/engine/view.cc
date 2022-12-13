@@ -246,7 +246,7 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
 
-    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + glm::vec3(wing.span*wing.lift_distribution, wing.span*sin(wing.dihedral), 0.0f), 1.0f);
+    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
     glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
     render_line(lift, Colors::Green, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 

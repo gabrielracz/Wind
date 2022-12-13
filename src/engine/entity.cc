@@ -1,4 +1,5 @@
 #include "entity.h"
+#include <GLFW/glfw3.h>
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/matrix.hpp>
@@ -12,6 +13,7 @@ const float AIR_DENSITY = 1.29f;
 Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dihedral, float ld)
     : pos(pos), span(span), chord(chord), area(abs((int)span)*chord), lift_distribution(ld), dihedral(dihedral)
 {
+    center_of_pressure = glm::vec3(span*lift_distribution, span*sin(dihedral), chord*0.25);
     glm::vec3 rot(pitch, 0.0f, dihedral);
     if(glm::length(rot) > 0.0f)
         rotm = glm::rotate(glm::mat4(1.0f), glm::length(rot), rot);
@@ -23,8 +25,9 @@ void Wing::solve_aoa(const glm::vec3& air) {
     glm::vec3 relwind_yz(0.0f, relwind.y, relwind.z);
     flow_velocity = glm::length(relwind_yz);
     rel = relwind;
-    glm::vec3 wing_chord = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    angle_of_attack = glm::orientedAngle( wing_chord, glm::normalize(relwind_yz),glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::vec3 wing_chord = rotm*glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    angle_of_attack = atan2(glm::dot(glm::cross(wing_chord, relwind_yz), glm::vec3(-1.0f, 0.0f, 0.0f)),
+                                     glm::dot(wing_chord, relwind_yz));
 }
 
 float Wing::coefficient_lift(float aoa) {
@@ -60,8 +63,6 @@ glm::vec3 Wing::solve(const glm::vec3& air) {
     solve_aoa(air);
     lift = solve_lift();
     drag = solve_drag();
-    // lift = glm::vec3(0.0f, 1.0f, 0.0f);
-    // drag = glm::vec3(0.0f, 0.0f, 1.0f);
     net_force = lift+drag;
     return net_force;
 }
@@ -72,9 +73,9 @@ Entity::Entity(const glm::vec3 &_position, const glm::vec3 &_rotation, EntityID 
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.03),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.03), //neg dihedral
-	elevator(glm::vec3(0.0f, 1.25f, 4.5f), 1, 1, 0.1f, 0.0f, 0.0f)
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.13),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.13), //neg dihedral
+	elevator(glm::vec3(0.0f, 1.25f, 4.5f), 1, 1, -0.01f, 0.0f, 0.0f)
 {}
 
 void Entity::update(float dt) {
@@ -88,6 +89,13 @@ void Entity::update(float dt) {
     elevator.solve(air);
     std::cout << std::endl;
 
+    glm::vec3 torque;
+    torque += glm::cross(rwing.pos + rwing.center_of_pressure, rwing.net_force);
+    torque += glm::cross(lwing.pos + lwing.center_of_pressure, lwing.net_force);
+    torque += glm::cross(elevator.pos, elevator.net_force);
+
+    rot_acceleration += glm::inverse(inertia) * torque;
+    std::cout << glm::to_string(rot_acceleration) << std::endl;
 
     //integrate accel, use
     //figure out xy and yx componenst of intertia and why they induce rotation

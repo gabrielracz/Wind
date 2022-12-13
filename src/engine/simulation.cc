@@ -17,7 +17,7 @@ int Simulation::update(double dt) {
 
     glm::vec4 gravity(0.0f, -9.8f, 0.0f, 0.0f);
     plane.acceleration = glm::inverse(plane.rotm) * gravity;
-    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 30.0f, 0.0f);
 
     plane.update(dt);
 	return 0;
