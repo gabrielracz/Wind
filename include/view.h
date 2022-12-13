@@ -43,6 +43,7 @@ namespace Colors {
     const glm::vec4 Green       = {0.0f, 1.0f, 0.0f, 1.0f};
     const glm::vec4 Gasoline    = {0x87/255.0f, 0xFF/255.0f, 0xAF/255.0f, 1.0f};
     const glm::vec4 Blue        = {0.0f, 0.0f, 1.0f, 1.0f};
+    const glm::vec4 Cyan        = {0.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Stormy      = {41/255.0f, 0x4F/255.0f, 0x4F/255.0f, 1.0f};
     const glm::vec4 Amber       = {0xFF/255.0f, 0xB0/255.0f, 0.0f, 1.0f};
     const glm::vec4 Pred        = {0xff/255.0f, 0x00/255.0f, 0x5d/255.0f, 0.0f};
@@ -121,6 +122,7 @@ public:
     void render_skybox();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
     void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
+    void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);
 
     static bool DRAW_WIREFRAME;
 

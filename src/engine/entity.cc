@@ -10,7 +10,7 @@
 const float AIR_DENSITY = 1.29f;
 
 Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dihedral, float ld)
-    : pos(pos), span(span), chord(chord), area(span*chord), lift_distribution(ld), dihedral(dihedral)
+    : pos(pos), span(span), chord(chord), area(abs((int)span)*chord), lift_distribution(ld), dihedral(dihedral)
 {
     glm::vec3 rot(pitch, 0.0f, dihedral);
     if(glm::length(rot) > 0.0f)
@@ -23,7 +23,7 @@ void Wing::solve_aoa(const glm::vec3& air) {
     glm::vec3 relwind_yz(0.0f, relwind.y, relwind.z);
     flow_velocity = glm::length(relwind_yz);
     rel = relwind;
-    glm::vec3 wing_chord = plane_to_wing * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    glm::vec3 wing_chord = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     angle_of_attack = glm::orientedAngle( wing_chord, glm::normalize(relwind_yz),glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
@@ -48,20 +48,25 @@ glm::vec3 Wing::solve_lift() {
 }
 
 glm::vec3 Wing::solve_drag() {
-    float cd = coefficient_lift(angle_of_attack);
+    float cd = coefficient_drag(angle_of_attack);
+    float drag = cd * (AIR_DENSITY * flow_velocity*flow_velocity)/2 * area;
+    std::cout << angle_of_attack;
+    glm::vec3 drag_vector = glm::normalize(rel) * drag;
+    return drag_vector;
 }
 
 glm::vec3 Wing::solve(const glm::vec3& air) {
-    glm::vec3 lift, drag;
+    // glm::vec3 lift, drag;
     solve_aoa(air);
     lift = solve_lift();
     drag = solve_drag();
-    net_force = lift;
-
-
-    std::cout << "AoA: " << std::fixed << std::setprecision(6) << angle_of_attack;
+    // lift = glm::vec3(0.0f, 1.0f, 0.0f);
+    // drag = glm::vec3(0.0f, 0.0f, 1.0f);
+    net_force = lift+drag;
     return net_force;
 }
+
+
 
 Entity::Entity(const glm::vec3 &_position, const glm::vec3 &_rotation, EntityID _id)
     : position(_position),
@@ -69,20 +74,19 @@ Entity::Entity(const glm::vec3 &_position, const glm::vec3 &_rotation, EntityID 
     id(_id),
     rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.03),
     lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.03), //neg dihedral
-	elevator(glm::vec3(0.0f, 1.25f, 4.5f), 1, 1, -0.03, 0.0f, 0.0f)
+	elevator(glm::vec3(0.0f, 1.25f, 4.5f), 1, 1, 0.1f, 0.0f, 0.0f)
 {}
 
 void Entity::update(float dt) {
-	
-	//solve the wings.
-	//2π⋅AR/2+sqrt(AR^2+4)
-    //solve one wing
+
     glm::vec3 air = -velocity;
-    glm::vec3 lwforce = lwing.solve(air);
+
+    lwing.solve(air);
     std::cout << " ##### ";
     rwing.solve(air);
+    std::cout << " ##### ";
+    elevator.solve(air);
     std::cout << std::endl;
-    //lift curve = sin(5.5x) peeks at 16 degrees angle of attack
 
 
     //integrate accel, use

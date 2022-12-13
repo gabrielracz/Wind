@@ -218,33 +218,17 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     glm::mat4 rotation(1.0f);
     //pitch, yaw, roll to rotation matrix
     translation = glm::translate(glm::mat4(1.0f), ent.position);
-
-    //render_line(ent.rotm[0], Colors::Blue, 5.0f, ent.position);
-    //render_line(ent.rotm[1], Colors::Red, 5.0f, ent.position);
-    //render_line(-ent.rotm[2], Colors::Green, 5.0f, ent.position);
-//    render_line(ent.acceleration, Colors::Magenta);
-
-
     rotation  = ent.rotm;
     transform = translation * rotation;
 
-    glm::mat4 lwing_transform = glm::translate(glm::mat4(1.0f), ent.lwing.pos) * ent.lwing.rotm;
-    glm::vec3 lwing_norm = transform * lwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    glm::vec3 lwing_pos = transform * glm::vec4(ent.lwing.pos + glm::vec3(ent.lwing.span*ent.lwing.lift_distribution, 0.1f, 0.0f), 1.0f);
-    render_line(lwing_norm, Colors::Amber, 90.0f, lwing_pos);
-
     // glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
     // glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    // glm::vec3 rwing_pos = transform * glm::vec4(ent.rwing.pos + glm::vec3(ent.rwing.span*ent.rwing.lift_distribution, ent.rwing.span*sin(ent.rwing.dihedral), 0.0f), 1.0f);
     // render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
 
-    glm::vec3 relwind = ent.rotm * ent.rwing.rotm * glm::vec4(ent.rwing.net_force, 1.0f);
-    render_line(relwind, Colors::Blue, 1.0f, ent.position);
+    render_wing_forces(ent.lwing, transform, rotation);
+    render_wing_forces(ent.rwing, transform, rotation);
+    render_wing_forces(ent.elevator, transform, rotation);
 
-    glm::mat4 elevator_transform = glm::translate(glm::mat4(1.0f), ent.elevator.pos) * ent.elevator.rotm;
-    glm::vec3 elevator_norm = transform * elevator_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    glm::vec3 elevator_pos = transform * glm::vec4(ent.elevator.pos + glm::vec3(ent.elevator.span*ent.elevator.lift_distribution, ent.elevator.span*sin(ent.elevator.dihedral), 0.0f), 1.0f);
-    render_line(elevator_norm, Colors::Amber, 90.0f, elevator_pos);
 
     Shader& shd = shaders[S_DEFAULT];
     shd.use();
@@ -258,6 +242,19 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     Mesh mesh = meshes[ent.id];
     mesh.Draw(shd);
 
+}
+
+void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
+
+    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + glm::vec3(wing.span*wing.lift_distribution, wing.span*sin(wing.dihedral), 0.0f), 1.0f);
+    glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
+    render_line(lift, Colors::Green, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+
+    glm::vec3 drag = rotation * wing.rotm * glm::vec4(wing.drag, 1.0f);
+    render_line(drag, Colors::Pred, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+
+    glm::vec3 net = rotation * wing.rotm * glm::vec4(wing.net_force, 1.0f);
+    render_line(net, Colors::Magenta, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 }
 
 void View::render_skybox() {

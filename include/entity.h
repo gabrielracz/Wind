@@ -17,6 +17,8 @@ typedef struct Wing {
     float angle_of_attack;
     float flow_velocity;
 
+    glm::vec3 lift;
+    glm::vec3 drag;
     glm::vec3 net_force;
     glm::vec3 facing;
     glm::vec3 rel;
