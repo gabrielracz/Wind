@@ -228,6 +228,9 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     render_wing_forces(ent.lwing, transform, rotation);
     render_wing_forces(ent.rwing, transform, rotation);
     render_wing_forces(ent.elevator, transform, rotation);
+    render_wing_forces(ent.rudder, transform, rotation);
+    
+    render_line(transform * glm::vec4(-ent.velocity, 1.0f), Colors::Blue, 1.0f);
 
 
     Shader& shd = shaders[S_DEFAULT];
@@ -253,7 +256,7 @@ void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation
     glm::vec3 drag = rotation * wing.rotm * glm::vec4(wing.drag, 1.0f);
     render_line(drag, Colors::Pred, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 
-    glm::vec3 net = rotation * wing.rotm * glm::vec4(wing.net_force, 1.0f);
+    glm::vec3 net = rotation * glm::vec4(wing.net_force, 1.0f);
     render_line(net, Colors::Magenta, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 }
 

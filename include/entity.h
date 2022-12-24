@@ -19,7 +19,7 @@ typedef struct Wing {
 
     glm::vec3 lift;
     glm::vec3 drag;
-    glm::vec3 net_force;
+    glm::vec3 net_force = glm::vec3(0.0f);
     glm::vec3 facing;
     glm::vec3 rel;
     glm::mat4 rotm = glm::mat4(1.0f);
@@ -42,6 +42,7 @@ public:
     glm::vec3 position;
     glm::vec3 velocity;
     glm::vec3 acceleration;
+    glm::vec3 thrust = glm::vec3(0.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 front = glm::vec3(0.0f, 0.0f, 1.0f);
     glm::mat4 rotm = glm::mat4(1.0f);
@@ -53,16 +54,16 @@ public:
 
    //https://jsbsim.sourceforge.net/MassProps.html
     float mass = 396.44f;
-    glm::mat3 inertia = glm::mat3(
-             870.0f,   0.0f,   0.0f,
-               0.0f, 2214.0f,   0.0f,
-              0.0f,   0.0f, 1375.0f
-            );
     // glm::mat3 inertia = glm::mat3(
-    //          870.0f,   68.0f,   0.0f,
-    //            68.0f, 2214.0f,   0.0f,
+    //          870.0f,   0.0f,   0.0f,
+    //            0.0f, 2214.0f,   0.0f,
     //           0.0f,   0.0f, 1375.0f
     //         );
+    glm::mat3 inertia = glm::mat3(
+             870.0f,   68.0f,   0.0f,
+               68.0f, 2214.0f,   0.0f,
+              0.0f,   0.0f, 1375.0f
+            );
 
     Wing rwing;
     Wing lwing;
