@@ -230,7 +230,7 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     render_wing_forces(ent.elevator, transform, rotation);
     render_wing_forces(ent.rudder, transform, rotation);
     
-    render_line(transform * glm::vec4(-ent.velocity, 1.0f), Colors::Blue, 1.0f);
+    render_line(transform * glm::vec4(ent.velocity, 1.0f), Colors::Blue, 1.0f);
 
 
     Shader& shd = shaders[S_DEFAULT];

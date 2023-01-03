@@ -26,7 +26,6 @@ FreeCamera::FreeCamera(const glm::vec3& pos, const glm::vec3& front, const glm::
 	yaw = acos(glm::dot(xzplane_projection, glm::vec3(1.0f, 0.0f, 0.0f)));
 	pitch = 0.0f;
 	roll = 0.0f;
-    std::cout << yaw << " " << glm::to_string(xzplane_projection) << std::endl;
 
 	look_sensitivity = 0.25f;
 	zoom_sensitivity = 0.1f;

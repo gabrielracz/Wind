@@ -6,6 +6,7 @@
 #include <ios>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 #include <glm/gtx/string_cast.hpp>
 
 const float AIR_DENSITY = 1.29f;
@@ -61,7 +62,7 @@ glm::vec3 Wing::solve(const glm::vec3& air) {
     solve_aoa(air);
     lift = solve_lift();
     drag = solve_drag();
-    net_force = rotm * glm::vec4(lift+drag, 1.0f);
+    net_force = lift + drag;
     return net_force;
 }
 
@@ -81,8 +82,23 @@ void Entity::update(float dt) {
 
     // velocity = glm::vec3(0.0f);
     // velocity = glm::inverse(rotm) * glm::vec4(0.0f, 0.0f, 30.0f, 0.0f);
-    glm::vec3 air = -velocity;
 
+    glm::vec3 translational_force(0.0f);
+    translational_force += rwing.net_force;
+    translational_force += lwing.net_force;
+    translational_force += elevator.net_force;
+    translational_force += rudder.net_force;
+    translational_force += thrust;
+
+
+
+    acceleration += translational_force / mass;
+
+    velocity += acceleration * dt;
+    velocity *= 0.99f;
+    acceleration =  glm::vec3(0.0f);
+
+    glm::vec3 air = -velocity;
     lwing.solve(air);
     rwing.solve(air);
     elevator.solve(air);
@@ -98,6 +114,7 @@ void Entity::update(float dt) {
     //integrate
     rot_acceleration += glm::inverse(inertia) * torque;
 
+    //FIXME: no inertia here
     rot_velocity += glm::inverse(inertia) * glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
     rot_velocity *= 0.99; //some damping
 
@@ -107,20 +124,6 @@ void Entity::update(float dt) {
         rotm = rotm * frame_rotation;
     }
 
-    rot_acceleration.x = 0;
-    rot_acceleration.y = 0;
-    rot_acceleration.z = 0;
+    rot_acceleration = glm::vec3(0.0f);
 
-    glm::vec3 translational_force(0.0f);
-
-    translational_force += rwing.net_force;
-    translational_force += lwing.net_force;
-    translational_force += elevator.net_force;
-    translational_force += rudder.net_force;
-
-    acceleration += translational_force / mass;
-    acceleration += thrust / mass;
-    velocity += acceleration * dt;
-    std::cout << glm::to_string(translational_force) << std::endl;
-    acceleration =  glm::vec3(0.0f);
 }
