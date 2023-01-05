@@ -5,11 +5,18 @@
 #include <glm/glm.hpp>
 #include "defs.h"
 
+enum class Pitch {
+    Up,
+    Down,
+    Neutral
+};
+
 typedef struct Wing {
     glm::vec3 pos;
     float span;
     float chord;
     float pitch;
+    float resting_pitch;
     float area;
     float lift_distribution;
     float dihedral;
@@ -33,6 +40,10 @@ typedef struct Wing {
     glm::vec3 solve_lift();
     glm::vec3 solve_drag();
     glm::vec3 solve(const glm::vec3& air);
+    void update_rotation();
+    void change_pitch(Pitch p);
+
+
 }Wing;
 
 class Entity {
@@ -41,7 +52,7 @@ public:
     //translational
     glm::vec3 position;
     glm::vec3 velocity = glm::vec3(0.0f);
-    glm::vec3 acceleration;
+    glm::vec3 acceleration = glm::vec3(0.0f);
     glm::vec3 thrust = glm::vec3(0.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 front = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -53,7 +64,7 @@ public:
     glm::vec3 rot_acceleration = glm::vec3(0.0f);
 
    //https://jsbsim.sourceforge.net/MassProps.html
-    float mass = 396.44f;
+    float mass = 350.44f;
     // glm::mat3 inertia = glm::mat3(
     //          870.0f,   0.0f,   0.0f,
     //            0.0f, 2214.0f,   0.0f,

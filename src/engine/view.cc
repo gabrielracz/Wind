@@ -147,24 +147,43 @@ int View::init_controls() {
 }
 
 int View::check_controls() {
+    //pitch
 	if(key_controls[GLFW_KEY_I]) {
-		sim->plane.rot_acceleration.x = -10;
-	}
-	if(key_controls[GLFW_KEY_K]) {
-		sim->plane.rot_acceleration.x = 10;
-	}
+		// sim->plane.rot_acceleration.x = -10;
+        sim->plane.elevator.change_pitch(Pitch::Up);
+	} else if(key_controls[GLFW_KEY_K]) {
+		// sim->plane.rot_acceleration.x = 10;
+        sim->plane.elevator.change_pitch(Pitch::Down);
+        std::cout << "down" << std::endl;
+	} else {
+        sim->plane.elevator.change_pitch(Pitch::Neutral);
+        std::cout << "neutral" << std::endl;
+    }
+
+    
+    //roll
 	if(key_controls[GLFW_KEY_L]) {
-		sim->plane.rot_acceleration.z = 10;
-	}
-	if(key_controls[GLFW_KEY_J]) {
-		sim->plane.rot_acceleration.z = -10;
-	}
+		// sim->plane.rot_acceleration.z = 10;
+        sim->plane.rwing.change_pitch(Pitch::Up);
+        sim->plane.lwing.change_pitch(Pitch::Down);
+	} else if(key_controls[GLFW_KEY_J]) {
+		// sim->plane.rot_acceleration.z = -10;
+        sim->plane.rwing.change_pitch(Pitch::Down);
+        sim->plane.lwing.change_pitch(Pitch::Up);
+	} else {
+        sim->plane.rwing.change_pitch(Pitch::Neutral);
+        sim->plane.lwing.change_pitch(Pitch::Neutral);
+    }
+
 	if(key_controls[GLFW_KEY_U]) {
-		sim->plane.rot_acceleration.y = 10;
-	}
-	if(key_controls[GLFW_KEY_O]) {
-		sim->plane.rot_acceleration.y = -10;
-	}
+		// sim->plane.rot_acceleration.y = 10;
+        sim->plane.rudder.change_pitch(Pitch::Down);
+	} else if(key_controls[GLFW_KEY_O]) {
+		// sim->plane.rot_acceleration.y = -10;
+        sim->plane.rudder.change_pitch(Pitch::Up);
+	} else {
+        sim->plane.rudder.change_pitch(Pitch::Neutral);
+    }
 
 	if(key_controls[GLFW_KEY_ESCAPE]) {
 		glfwSetWindowShouldClose(win.ptr, true);
@@ -230,7 +249,7 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     render_wing_forces(ent.elevator, transform, rotation);
     render_wing_forces(ent.rudder, transform, rotation);
     
-    render_line(transform * glm::vec4(ent.velocity, 1.0f), Colors::Blue, 1.0f);
+    render_line(rotation * glm::vec4(ent.velocity, 1.0f), Colors::Blue, 1.0f, ent.position);
 
 
     Shader& shd = shaders[S_DEFAULT];
@@ -257,7 +276,7 @@ void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation
     render_line(drag, Colors::Pred, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 
     glm::vec3 net = rotation * glm::vec4(wing.net_force, 1.0f);
-    render_line(net, Colors::Magenta, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+    render_line(net, Colors::Magenta, 1.5f, rwing_pos + glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 void View::render_skybox() {

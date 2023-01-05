@@ -12,9 +12,14 @@
 const float AIR_DENSITY = 1.29f;
 
 Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dihedral, float ld)
-    : pos(pos), span(span), chord(chord), area(abs((int)span)*chord), lift_distribution(ld), dihedral(dihedral)
+    : pos(pos), span(span), chord(chord), area(abs((int)span)*chord), lift_distribution(ld), resting_pitch(pitch), dihedral(dihedral)
 {
-    center_of_pressure = glm::vec3(span*lift_distribution, span*sin(dihedral), chord*0.25);
+    pitch = resting_pitch;
+    update_rotation();
+    center_of_pressure = rotm * glm::vec4(span*lift_distribution, span*sin(dihedral), chord*0.25, 1.0f);
+}
+
+void Wing::update_rotation() {
     glm::vec3 rot(pitch, 0.0f, dihedral);
     if(glm::length(rot) > 0.0f)
         rotm = glm::rotate(glm::mat4(1.0f), glm::length(rot), rot);
@@ -25,6 +30,7 @@ float Wing::coefficient_lift(float aoa) {
     if(aoa <= stall_angle && aoa >= -stall_angle) {
         return (max_cl / stall_angle) * aoa;
     } else {
+        std::cout << "STALL" << std::endl;
         return sin(2*aoa);
     }
 }
@@ -62,8 +68,27 @@ glm::vec3 Wing::solve(const glm::vec3& air) {
     solve_aoa(air);
     lift = solve_lift();
     drag = solve_drag();
-    net_force = lift + drag;
-    return net_force;
+    net_force = rotm * glm::vec4(lift + drag, 1.0f);
+    return rotm * glm::vec4(net_force, 1.0f);
+    // return net_force;
+}
+
+void Wing::change_pitch(Pitch p) {
+    switch(p) {
+        case Pitch::Up:
+            pitch = resting_pitch + 0.07f;
+            break;
+        case Pitch::Down:
+            pitch = resting_pitch - 0.07f;
+            break;
+        case Pitch::Neutral:
+            pitch = resting_pitch;
+            break;
+        default:
+            break;
+    };
+    update_rotation();
+    // std::cout << pitch << std::endl;
 }
 
 
@@ -72,37 +97,40 @@ Entity::Entity(const glm::vec3 &_position, const glm::vec3 &_rotation, EntityID 
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.13),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.13), //neg dihedral
-	elevator(glm::vec3(0.0f, 1.25f, 4.5f), 1, 0.5, -0.01f, 0.0f, 0.0f),
-	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1, 1.0f, 0.0f, M_PI_2)
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.03),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.03), //neg dihedral
+	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 4, 1, -0.05f, 0.0f, 0.0f),
+	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 2.0f, 2.0f, 0.0f, M_PI_2)
 {}
 
 void Entity::update(float dt) {
-
+    // float dt = 0.01f;
     // velocity = glm::vec3(0.0f);
     // velocity = glm::inverse(rotm) * glm::vec4(0.0f, 0.0f, 30.0f, 0.0f);
-
-    glm::vec3 translational_force(0.0f);
-    translational_force += rwing.net_force;
-    translational_force += lwing.net_force;
-    translational_force += elevator.net_force;
-    translational_force += rudder.net_force;
-    translational_force += thrust;
-
-
-
-    acceleration += translational_force / mass;
-
-    velocity += acceleration * dt;
-    velocity *= 0.99f;
-    acceleration =  glm::vec3(0.0f);
-
+// 
     glm::vec3 air = -velocity;
     lwing.solve(air);
     rwing.solve(air);
     elevator.solve(air);
     rudder.solve(air);
+
+    glm::vec3 translational_force(0.0f);
+    translational_force += rwing.net_force;
+    translational_force += lwing.net_force;
+    translational_force += elevator.net_force;
+    // translational_force += rudder.net_force;
+    translational_force += thrust;
+
+    float fuselage_drag = 5.0f;
+    translational_force += glm::normalize(velocity) * fuselage_drag * glm::dot(velocity, glm::vec3(0.0f, 0.0f, -1.0f));
+
+
+    acceleration += translational_force / mass;
+
+    velocity += acceleration * dt;
+    velocity *= 0.999;
+    position += glm::vec3(velocity.x, velocity.y, -velocity.z) * dt / 4.0f;
+    acceleration =  glm::vec3(0.0f);
 
     glm::vec3 torque;
     torque += glm::cross(rwing.pos + rwing.center_of_pressure, rwing.net_force);
@@ -110,13 +138,12 @@ void Entity::update(float dt) {
     torque += glm::cross(elevator.pos, elevator.net_force);
     torque += glm::cross(rudder.pos, rudder.net_force);
 
-
     //integrate
     rot_acceleration += glm::inverse(inertia) * torque;
 
     //FIXME: no inertia here
     rot_velocity += glm::inverse(inertia) * glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
-    rot_velocity *= 0.99; //some damping
+    rot_velocity *= 0.97; //some damping
 
     float theta = glm::length(rot_velocity);
     if(theta > 0.0f) {
