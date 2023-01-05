@@ -154,10 +154,8 @@ int View::check_controls() {
 	} else if(key_controls[GLFW_KEY_K]) {
 		// sim->plane.rot_acceleration.x = 10;
         sim->plane.elevator.change_pitch(Pitch::Down);
-        std::cout << "down" << std::endl;
 	} else {
         sim->plane.elevator.change_pitch(Pitch::Neutral);
-        std::cout << "neutral" << std::endl;
     }
 
     

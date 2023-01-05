@@ -88,7 +88,6 @@ void Wing::change_pitch(Pitch p) {
             break;
     };
     update_rotation();
-    // std::cout << pitch << std::endl;
 }
 
 
@@ -99,7 +98,7 @@ Entity::Entity(const glm::vec3 &_position, const glm::vec3 &_rotation, EntityID 
     id(_id),
     rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.03),
     lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.03), //neg dihedral
-	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 4, 1, -0.05f, 0.0f, 0.0f),
+	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.0f, 0.0f, 0.0f),
 	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 2.0f, 2.0f, 0.0f, M_PI_2)
 {}
 
@@ -118,18 +117,23 @@ void Entity::update(float dt) {
     translational_force += rwing.net_force;
     translational_force += lwing.net_force;
     translational_force += elevator.net_force;
-    // translational_force += rudder.net_force;
+    translational_force += rudder.net_force;
     translational_force += thrust;
 
-    float fuselage_drag = 5.0f;
-    translational_force += glm::normalize(velocity) * fuselage_drag * glm::dot(velocity, glm::vec3(0.0f, 0.0f, -1.0f));
-
+    glm::vec3 vdir = glm::normalize(velocity);
+    float vmag = glm::length(velocity);
+    float drag_constant = 5.0f;
+    float cross_section = 1.0f - glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 0.05f;
+    glm::vec3 fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
+    std::cout << glm::length(fuselage_drag) << std::endl;
+    translational_force += fuselage_drag;
 
     acceleration += translational_force / mass;
 
     velocity += acceleration * dt;
     velocity *= 0.999;
-    position += glm::vec3(velocity.x, velocity.y, -velocity.z) * dt / 4.0f;
+    glm::vec3 world_velocity = rotm * glm::vec4(velocity, 1.0f);
+    position += glm::vec3(world_velocity.x, world_velocity.y, world_velocity.z) * dt / 4.0f;
     acceleration =  glm::vec3(0.0f);
 
     glm::vec3 torque;
