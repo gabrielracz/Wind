@@ -22,7 +22,7 @@ Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dih
 }
 
 void Wing::update_rotation() {
-    glm::vec3 rot(pitch, 0.0f, dihedral);
+    glm::vec3 rot(pitch, 0.0f, -dihedral);
     if(glm::length(rot) > 0.0f)
         rotm = glm::rotate(glm::mat4(1.0f), glm::length(rot), rot);
 }
@@ -98,10 +98,10 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.1),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.1), //neg dihedral
-	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.003f, 0.0f, 0.0f),
-	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 2.0f, 2.0f, 0.0f, M_PI_2)
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.2),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.2), //neg dihedral
+	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.0005f, 0.0f, 0.0f),
+	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.0f, 0.5f, 0.0f, M_PI_2)
 {
 
 }
@@ -123,6 +123,8 @@ void Aircraft::update(float dt) {
     translational_force += elevator.net_force;
     translational_force += rudder.net_force;
     translational_force += thrust;
+
+    std::cout << glm::length(lwing.net_force) - glm::length(rwing.net_force) << std::endl;
 
     glm::vec3 vdir = glm::normalize(velocity);
     float vmag = glm::length(velocity);

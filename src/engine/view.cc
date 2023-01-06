@@ -213,7 +213,7 @@ int View::render(double dt)
     // camera.position = glm::vec3(0.0f, 4.0f, -15.0f) + sim->plane.position;
     camera.Update();
 
-    // render_skybox(4;
+    // render_skybox();
     render_terrain();
 
     render_aircraft(sim->plane, Colors::Amber);
@@ -247,6 +247,9 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
         render_wing_forces(acrft.elevator, transform, rotation);
         render_wing_forces(acrft.rudder, transform, rotation);
         render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Blue, 1.0f, acrft.position);
+        render_line(rotation * acrft.rwing.rotm * glm::vec4(acrft.rwing.span, 0.0f, 0.0f, 1.0f), Colors::Magenta, 1.0f, acrft.position);
+        render_line(rotation * acrft.lwing.rotm * glm::vec4(acrft.lwing.span, 0.0f, 0.0f, 1.0f), Colors::Magenta, 1.0f, acrft.position);
+
     }
 
     Shader& shd = shaders[S_DEFAULT];

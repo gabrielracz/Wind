@@ -33,7 +33,7 @@ typedef struct Wing {
     glm::vec3 center_of_pressure;
 
     Wing() = default;
-    Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.4f);
+    Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.5f);
     float coefficient_lift(float aoa);
     float coefficient_drag(float aoa);
     void solve_aoa(const glm::vec3& relwind);
