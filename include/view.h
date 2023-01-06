@@ -103,6 +103,7 @@ public:
 	Mouse mouse;
 
     std::unordered_map<int, bool> key_controls;
+    glm::vec3 light_pos;
 
 	Shader shaders[N_SHADERS];
 	Texture textures[N_TEXTURES];

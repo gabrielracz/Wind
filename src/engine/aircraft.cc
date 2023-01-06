@@ -32,7 +32,7 @@ float Wing::coefficient_lift(float aoa) {
     if(aoa <= stall_angle && aoa >= -stall_angle) {
         return (max_cl / stall_angle) * aoa; //linear lift
     } else {
-        std::cout << "STALL" << std::endl;
+        // std::cout << "STALL" << std::endl;
         return sin(2*aoa);
     }
 }

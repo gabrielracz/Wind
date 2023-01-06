@@ -13,6 +13,8 @@ enum MoveDirection {
 	LEFT
 };
 
+class Aircraft;
+
 class FreeCamera {
 public:
 	FreeCamera();
@@ -46,6 +48,8 @@ public:
 	glm::vec3 direction;
 //private:
 	glm::vec3 up;
+
+    Aircraft* target = nullptr;
 
 
 	int window_width;

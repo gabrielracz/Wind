@@ -122,6 +122,8 @@ int View::init(Application* parent, Simulation* model)
 
 	init_controls();
 
+    light_pos = glm::vec3(4.0f, 50.0f, 0.0f);
+    camera.target = &sim->plane;
 	return 0;
 }
 
@@ -208,12 +210,13 @@ int View::render(double dt)
     glm::vec4 clr = Colors::Black;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // camera.position = glm::vec3(0.0f, 4.0f, -15.0f) + sim->plane.position;
     camera.Update();
 
-    render_skybox();
+    // render_skybox(4;
     render_terrain();
 
-    render_aircraft(sim->plane, Colors::LGrey);
+    render_aircraft(sim->plane, Colors::Amber);
 
     // render hud overtop
     char frame_time[32];
@@ -238,10 +241,6 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
     rotation  = acrft.rotm;
     transform = translation * rotation;
 
-    // glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
-    // glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    // render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
-
     if(View::DRAW_WIREFRAME) {
         render_wing_forces(acrft.lwing, transform, rotation);
         render_wing_forces(acrft.rwing, transform, rotation);
@@ -250,12 +249,11 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
         render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Blue, 1.0f, acrft.position);
     }
 
-
     Shader& shd = shaders[S_DEFAULT];
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
-    shd.SetUniform3f(glm::vec3(4.0f, 10.0f, 0.0f), "light_pos");
+    shd.SetUniform3f(light_pos, "light_pos");
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
@@ -266,7 +264,18 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
 }
 
 void View::render_terrain() {
+    glm::mat4 transform(1.0f);
+    glm::vec4 color = Colors::LGrey;
+    Shader& shd = shaders[S_DEFAULT];
+    shd.use();
+    shd.SetUniform4f(color, "base_color");
+    shd.SetUniform3f(Colors::White, "light_color");
+    shd.SetUniform3f(light_pos, "light_pos");
+    shd.SetUniform4m(transform, "model");
+    shd.SetUniform4m(camera.projection, "projection");
+    shd.SetUniform4m(camera.view, "view");
 
+    sim->terrain.Draw(shd);
 }
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {

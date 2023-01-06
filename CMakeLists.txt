@@ -22,6 +22,7 @@ set(HDRS
 	include/random.h
 	include/shader.h
 	include/shapes.h
+    include/perlin.h
     include/aircraft.h
 	include/paths.h
     include/defs.h)

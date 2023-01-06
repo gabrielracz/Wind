@@ -1,5 +1,6 @@
 #include "freecamera.h"
 #include <glm/gtx/string_cast.hpp>
+#include "aircraft.h"
 
 FreeCamera::FreeCamera() : 
 	FreeCamera(	glm::vec3(0.0f, 0.0f, 5.0f),
@@ -51,7 +52,14 @@ void FreeCamera::Update() {
 	direction.z = sin(yaw) * cos(pitch);
 
     projection = glm::perspective(fov, aspect_ratio, 0.1f, 500.0f);
-	view = glm::lookAt(position, position + direction, up);
+    if(target != nullptr) {
+        glm::vec3 up = target->rotm * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+        glm::vec3 eye = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 4.0f, 15.0f, 0.0f));
+        glm::vec3 center = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        view = glm::lookAt(eye, center, up);
+    } else {
+        view = glm::lookAt(position, position + direction, up);
+    }
 }
 
 void FreeCamera::Move(MoveDirection d) {

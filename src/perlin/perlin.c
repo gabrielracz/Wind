@@ -5,8 +5,7 @@
 #include<math.h>
 #include<unistd.h>
 #include<memory.h>
-
-/*#include "perlin.h"*/
+#include "perlin.h"
 
 /*#define LINEAR */
 #define SMOOTHSTEP 
