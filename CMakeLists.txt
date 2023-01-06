@@ -22,8 +22,8 @@ set(HDRS
 	include/random.h
 	include/shader.h
 	include/shapes.h
+    include/aircraft.h
 	include/paths.h
-    include/entity.h
     include/defs.h)
  
 set(SRCS
@@ -37,7 +37,7 @@ set(SRCS
 	src/engine/shader.cc
 	src/engine/random.cc
 	src/engine/shapes.cc
-    src/engine/entity.cc)
+    src/engine/aircraft.cc)
 
 # Add path name to configuration file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/path_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/paths.h)

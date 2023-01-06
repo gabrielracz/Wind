@@ -1,15 +1,16 @@
 #ifndef MODEL_H
 #define MODEL_H
 #include "mesh.h"
-#include "entity.h"
+#include "aircraft.h"
 
 class Simulation {
 public:
-    Mesh mesh;
-    Entity plane;
+    Mesh terrain;
+    Aircraft plane;
     unsigned int elapsed = 0;
 	Simulation() = default;
 	int init();
+    void gen_terrain();
 	int update(double dt);
 };
 

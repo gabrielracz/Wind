@@ -21,7 +21,7 @@
 #include "shapes.h"
 #include "defs.h"
 #include "mesh.h"
-#include "entity.h"
+#include "aircraft.h"
 
 
 #define NUM_SHADERS 10
@@ -118,8 +118,9 @@ public:
     int init_controls();
     int check_controls();
 	int render(double dt);
-    void render_entity(Entity& ent, const glm::vec4& color);
+    void render_aircraft(Aircraft& ent, const glm::vec4& color);
     void render_skybox();
+    void render_terrain();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
     void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);

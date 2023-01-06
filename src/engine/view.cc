@@ -158,7 +158,6 @@ int View::check_controls() {
         sim->plane.elevator.change_pitch(Pitch::Neutral);
     }
 
-    
     //roll
 	if(key_controls[GLFW_KEY_L]) {
 		// sim->plane.rot_acceleration.z = 10;
@@ -212,8 +211,9 @@ int View::render(double dt)
     camera.Update();
 
     render_skybox();
+    render_terrain();
 
-    render_entity(sim->plane, Colors::LGrey);
+    render_aircraft(sim->plane, Colors::LGrey);
 
     // render hud overtop
     char frame_time[32];
@@ -228,26 +228,27 @@ int View::render(double dt)
 	return 0;
 }
 
-void View::render_entity(Entity& ent, const glm::vec4& color)
+void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
 {
     glm::mat4 transform(1.0f);
     glm::mat4 translation(1.0f);
     glm::mat4 rotation(1.0f);
     //pitch, yaw, roll to rotation matrix
-    translation = glm::translate(glm::mat4(1.0f), ent.position);
-    rotation  = ent.rotm;
+    translation = glm::translate(glm::mat4(1.0f), acrft.position);
+    rotation  = acrft.rotm;
     transform = translation * rotation;
 
     // glm::mat4 rwing_transform = glm::translate(glm::mat4(1.0f), ent.rwing.pos) * ent.rwing.rotm;
     // glm::vec3 rwing_norm = transform * rwing_transform * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     // render_line(rwing_norm, Colors::Amber, 90.0f, rwing_pos);
 
-    render_wing_forces(ent.lwing, transform, rotation);
-    render_wing_forces(ent.rwing, transform, rotation);
-    render_wing_forces(ent.elevator, transform, rotation);
-    render_wing_forces(ent.rudder, transform, rotation);
-    
-    render_line(rotation * glm::vec4(ent.velocity, 1.0f), Colors::Blue, 1.0f, ent.position);
+    if(View::DRAW_WIREFRAME) {
+        render_wing_forces(acrft.lwing, transform, rotation);
+        render_wing_forces(acrft.rwing, transform, rotation);
+        render_wing_forces(acrft.elevator, transform, rotation);
+        render_wing_forces(acrft.rudder, transform, rotation);
+        render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Blue, 1.0f, acrft.position);
+    }
 
 
     Shader& shd = shaders[S_DEFAULT];
@@ -259,8 +260,12 @@ void View::render_entity(Entity& ent, const glm::vec4& color)
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
 
-    Mesh mesh = meshes[ent.id];
+    Mesh mesh = meshes[acrft.id];
     mesh.Draw(shd);
+
+}
+
+void View::render_terrain() {
 
 }
 
