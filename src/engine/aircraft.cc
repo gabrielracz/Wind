@@ -98,19 +98,16 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.2),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.2), //neg dihedral
-	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.0005f, 0.0f, 0.0f),
-	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.0f, 0.5f, 0.0f, M_PI_2)
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.15),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.15), //neg dihedral
+	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.00025f, 0.0f, 0.0f),
+	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.0f, 1.0f, 0.0f, M_PI_2)
 {
 
 }
 
 void Aircraft::update(float dt) {
-    // float dt = 0.01f;
-    // velocity = glm::vec3(0.0f);
-    // velocity = glm::inverse(rotm) * glm::vec4(0.0f, 0.0f, 30.0f, 0.0f);
-// 
+
     glm::vec3 air = -velocity;
     lwing.solve(air);
     rwing.solve(air);
@@ -122,16 +119,14 @@ void Aircraft::update(float dt) {
     translational_force += lwing.net_force;
     translational_force += elevator.net_force;
     translational_force += rudder.net_force;
-    translational_force += thrust;
-
-    std::cout << glm::length(lwing.net_force) - glm::length(rwing.net_force) << std::endl;
+    if(throttle)
+        translational_force += thrust;
 
     glm::vec3 vdir = glm::normalize(velocity);
     float vmag = glm::length(velocity);
     float drag_constant = 5.0f;
     float cross_section = 1.0f - glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 0.05f;
     glm::vec3 fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
-    // std::cout << glm::length(fuselage_drag) << std::endl;
     translational_force += fuselage_drag;
 
     acceleration += translational_force / mass;

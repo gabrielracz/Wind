@@ -5,6 +5,7 @@
 #include "shapes.h"
 #include "simulation.h"
 #include <GLFW/glfw3.h>
+#include <linux/limits.h>
 #include <paths.h>
 
 #include <glm/gtx/vector_angle.hpp>
@@ -122,7 +123,7 @@ int View::init(Application* parent, Simulation* model)
 
 	init_controls();
 
-    light_pos = glm::vec3(4.0f, 50.0f, 0.0f);
+    light_pos = glm::vec3(4.0f, 100.0f, 0.0f);
     camera.target = &sim->plane;
 	return 0;
 }
@@ -150,23 +151,19 @@ int View::init_controls() {
 
 int View::check_controls() {
     //pitch
-	if(key_controls[GLFW_KEY_I]) {
-		// sim->plane.rot_acceleration.x = -10;
+	if(key_controls[GLFW_KEY_W]) {
         sim->plane.elevator.change_pitch(Pitch::Up);
-	} else if(key_controls[GLFW_KEY_K]) {
-		// sim->plane.rot_acceleration.x = 10;
+	} else if(key_controls[GLFW_KEY_S]) {
         sim->plane.elevator.change_pitch(Pitch::Down);
 	} else {
         sim->plane.elevator.change_pitch(Pitch::Neutral);
     }
 
     //roll
-	if(key_controls[GLFW_KEY_L]) {
-		// sim->plane.rot_acceleration.z = 10;
+	if(key_controls[GLFW_KEY_D]) {
         sim->plane.rwing.change_pitch(Pitch::Up);
         sim->plane.lwing.change_pitch(Pitch::Down);
-	} else if(key_controls[GLFW_KEY_J]) {
-		// sim->plane.rot_acceleration.z = -10;
+	} else if(key_controls[GLFW_KEY_A]) {
         sim->plane.rwing.change_pitch(Pitch::Down);
         sim->plane.lwing.change_pitch(Pitch::Up);
 	} else {
@@ -174,11 +171,9 @@ int View::check_controls() {
         sim->plane.lwing.change_pitch(Pitch::Neutral);
     }
 
-	if(key_controls[GLFW_KEY_U]) {
-		// sim->plane.rot_acceleration.y = 10;
+	if(key_controls[GLFW_KEY_Q]) {
         sim->plane.rudder.change_pitch(Pitch::Down);
 	} else if(key_controls[GLFW_KEY_O]) {
-		// sim->plane.rot_acceleration.y = -10;
         sim->plane.rudder.change_pitch(Pitch::Up);
 	} else {
         sim->plane.rudder.change_pitch(Pitch::Neutral);
@@ -188,10 +183,11 @@ int View::check_controls() {
 		glfwSetWindowShouldClose(win.ptr, true);
 	}
 
-	camera.move_forward = key_controls[GLFW_KEY_W];
-    camera.move_back = key_controls[GLFW_KEY_S];
-    camera.move_left = key_controls[GLFW_KEY_A];
-    camera.move_right = key_controls[GLFW_KEY_D];
+    sim->plane.throttle = !key_controls[GLFW_KEY_SPACE];
+	// camera.move_forward = key_controls[GLFW_KEY_W];
+    // camera.move_back = key_controls[GLFW_KEY_S];
+    // camera.move_left = key_controls[GLFW_KEY_A];
+    // camera.move_right = key_controls[GLFW_KEY_D];
 	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
 		View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
 		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
@@ -215,7 +211,6 @@ int View::render(double dt)
 
     // render_skybox();
     render_terrain();
-
     render_aircraft(sim->plane, Colors::Amber);
 
     // render hud overtop
@@ -226,6 +221,10 @@ int View::render(double dt)
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
     render_text(fps, -0.775, 0.8, 15, Colors::Green);
+
+    char airspeed[32];
+    std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
+    render_text(airspeed, 0.775, 0.8, 15, Colors::Amber);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -247,8 +246,8 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
         render_wing_forces(acrft.elevator, transform, rotation);
         render_wing_forces(acrft.rudder, transform, rotation);
         render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Blue, 1.0f, acrft.position);
-        render_line(rotation * acrft.rwing.rotm * glm::vec4(acrft.rwing.span, 0.0f, 0.0f, 1.0f), Colors::Magenta, 1.0f, acrft.position);
-        render_line(rotation * acrft.lwing.rotm * glm::vec4(acrft.lwing.span, 0.0f, 0.0f, 1.0f), Colors::Magenta, 1.0f, acrft.position);
+        if(acrft.throttle)
+            render_line(rotation * glm::vec4(acrft.thrust, 1.0f), Colors::Green, 1.0f, acrft.position);
 
     }
 

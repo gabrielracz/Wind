@@ -76,6 +76,8 @@ public:
               0.0f,   0.0f, 1375.0f
             );
 
+    bool throttle;
+
     Wing rwing;
     Wing lwing;
     Wing elevator;

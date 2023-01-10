@@ -32,7 +32,7 @@ FreeCamera::FreeCamera(const glm::vec3& pos, const glm::vec3& front, const glm::
 	zoom_sensitivity = 0.1f;
 	speed = 0.3f;
 
-	projection = glm::perspective(fov, aspect_ratio, 0.1f, 500.0f);
+	projection = glm::perspective(fov, aspect_ratio, 0.1f, 1000.0f);
 	view = glm::lookAt(position, position + direction, up);
 }
 
@@ -51,10 +51,10 @@ void FreeCamera::Update() {
 	direction.y = sin(pitch);
 	direction.z = sin(yaw) * cos(pitch);
 
-    projection = glm::perspective(fov, aspect_ratio, 0.1f, 500.0f);
+    projection = glm::perspective(fov, aspect_ratio, 0.1f, 1000.0f);
     if(target != nullptr) {
         glm::vec3 up = target->rotm * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-        glm::vec3 eye = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 4.0f, 15.0f, 0.0f));
+        glm::vec3 eye = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 4.0f, 17.0f, 0.0f));
         glm::vec3 center = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
         view = glm::lookAt(eye, center, up);
     } else {
