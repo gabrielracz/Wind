@@ -46,7 +46,8 @@ namespace Colors {
     const glm::vec4 Cyan        = {0.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Stormy      = {41/255.0f, 0x4F/255.0f, 0x4F/255.0f, 1.0f};
     const glm::vec4 Amber       = {0xFF/255.0f, 0xB0/255.0f, 0.0f, 1.0f};
-    const glm::vec4 Pred        = {0xff/255.0f, 0x00/255.0f, 0x5d/255.0f, 0.0f};
+    const glm::vec4 Pred        = {0xff/255.0f, 0x00/255.0f, 0x5d/255.0f, 1.0f};
+    const glm::vec4 Brown       = {0x76/255.0f, 0x44/255.0f, 0x07/255.0f, 1.0f};
 
 }
 

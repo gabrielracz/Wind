@@ -101,7 +101,7 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.15),
     lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.15), //neg dihedral
 	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.00025f, 0.0f, 0.0f),
-	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.0f, 1.0f, 0.0f, M_PI_2)
+	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.5f, 1.0f, 0.0f, M_PI_2)
 {
 
 }

@@ -81,7 +81,7 @@ int View::init(Application* parent, Simulation* model)
 
 
     //right, left, top, bottom, front, back
-#define SKYBOX_NAME "wrath"
+#define SKYBOX_NAME "sunnysky"
     std::vector<std::string> skybox_faces({
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_ft.jpg",
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_bk.jpg",
@@ -172,9 +172,9 @@ int View::check_controls() {
     }
 
 	if(key_controls[GLFW_KEY_Q]) {
-        sim->plane.rudder.change_pitch(Pitch::Down);
-	} else if(key_controls[GLFW_KEY_O]) {
         sim->plane.rudder.change_pitch(Pitch::Up);
+	} else if(key_controls[GLFW_KEY_E]) {
+        sim->plane.rudder.change_pitch(Pitch::Down);
 	} else {
         sim->plane.rudder.change_pitch(Pitch::Neutral);
     }
@@ -209,7 +209,7 @@ int View::render(double dt)
     // camera.position = glm::vec3(0.0f, 4.0f, -15.0f) + sim->plane.position;
     camera.Update();
 
-    // render_skybox();
+    render_skybox();
     render_terrain();
     render_aircraft(sim->plane, Colors::Amber);
 
@@ -245,7 +245,7 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
         render_wing_forces(acrft.rwing, transform, rotation);
         render_wing_forces(acrft.elevator, transform, rotation);
         render_wing_forces(acrft.rudder, transform, rotation);
-        render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Blue, 1.0f, acrft.position);
+        render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Cyan, 1.0f, acrft.position);
         if(acrft.throttle)
             render_line(rotation * glm::vec4(acrft.thrust, 1.0f), Colors::Green, 1.0f, acrft.position);
 
