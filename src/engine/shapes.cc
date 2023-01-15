@@ -1,4 +1,9 @@
 #include "shapes.h"
+
+constexpr float Shapes::cube_vertices[];
+constexpr float Shapes::cube_vertices_t[];
+constexpr float Shapes::cube_vertices_n[];
+constexpr float Shapes::cube_vertices_tn[];
 //===============UVSPHERE=====================
 void Shapes::GenerateSphere(int segments, float radius, float** vertices, unsigned int** indices, unsigned int* num_vertices, unsigned int* num_indices) {
 	*num_vertices = (segments+1) * (segments +1) * 5;
