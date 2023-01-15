@@ -580,8 +580,8 @@ Texture View::load_cubemap(std::vector<std::string>& faces) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-
-	return {tex_id, "skybox"};
+    Texture t = {tex_id, "skybox"};
+	return t;
 }
 
 unsigned int View::init_cube() {
