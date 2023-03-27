@@ -1,5 +1,5 @@
 #version 330 core
-in vec3 frag_pos;
+in vec3 frag_pos_og;
 in vec2 frag_uv;
 in vec3 frag_normal;
 
@@ -12,6 +12,11 @@ uniform sampler2D texture1;
 
 
 void main(){
+	float pixel = 0.5f;
+	vec3 frag_pos = vec3(frag_pos_og.x - mod(frag_pos_og.x, pixel), 
+			frag_pos_og.y - mod(frag_pos_og.y, pixel),
+			frag_pos_og.z - mod(frag_pos_og.z, pixel));
+	
     float ambient_strength = 0.4f;
     vec3 ambient = ambient_strength * light_color;
 

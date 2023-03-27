@@ -67,10 +67,11 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-//    glfwSwapInterval(0);
+   glfwSwapInterval(0);
 
 	//  Shaders
-	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	// shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
 	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
     shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
     shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox.glsl");
@@ -224,7 +225,7 @@ int View::render(double dt)
 
     char airspeed[32];
     std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
-    render_text(airspeed, 0.775, 0.8, 15, Colors::Amber);
+    render_text(airspeed, 0.775, 0.8, 11, Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -276,6 +277,24 @@ void View::render_terrain() {
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
+
+    const glm::mat4 dither_kernel2 =
+        glm::mat2(
+            0, 2,
+            3, 1
+        ) * 1.0f/4.0f;
+
+    const glm::mat4 dither_kernel4 = 
+        glm::mat4(
+            0, 8, 2, 10,
+            12, 4, 14, 6,
+            3, 11, 1, 9,
+            15, 7, 13, 5
+        ) * 1.0f/16.0f;
+
+    shd.SetUniform4m(dither_kernel4, "kernel");
+    shd.SetUniform1i(win.width, "window_width");
+    shd.SetUniform1i(win.height, "window_height");
 
     sim->terrain.Draw(shd);
 }

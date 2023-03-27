@@ -54,8 +54,8 @@ void Simulation::gen_terrain() {
 			//position
             unsigned int hz = (z+grid_size/2.0f)*map_width;
             unsigned int hx = (x+grid_size/2.0f);
-			unsigned char pixel = heightmap[hx + hz];
-            float height_scale = pixel/255.0f;
+			unsigned char pGIXel = heightmap[hx + hz];
+            float height_scale = pGIXel/255.0f;
             float height = max_height * height_scale;
             // float y = min_height + height;
             float perl1 = perlin((x + pscale)*0.03f, (z + pscale)*0.03f) * 30.0f;
@@ -76,16 +76,16 @@ void Simulation::gen_terrain() {
 	}
     std::cout << "vertices generated" << std::endl;
 
-#define IX(x, y) ((x) + (y)*grid_width)
+#define GIX(x, y) ((x) + (y)*grid_width)
 	for(int z = 0; z < grid_width-1; z++) {
 		for(int x = 0; x < grid_width-1; x++) {
-			indices.push_back(IX(x, z));
-			indices.push_back(IX(x+1, z+1));
-			indices.push_back(IX(x, z+1));
+			indices.push_back(GIX(x, z));
+			indices.push_back(GIX(x+1, z+1));
+			indices.push_back(GIX(x, z+1));
 
-			indices.push_back(IX(x, z));
-			indices.push_back(IX(x+1, z));
-			indices.push_back(IX(x+1, z+1));
+			indices.push_back(GIX(x, z));
+			indices.push_back(GIX(x+1, z));
+			indices.push_back(GIX(x+1, z+1));
 		}
 	}
 

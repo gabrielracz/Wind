@@ -107,6 +107,7 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
 }
 
 void Aircraft::update(float dt) {
+    if(dt == 0.0f) {return;}
 
     glm::vec3 air = -velocity;
     lwing.solve(air);
@@ -132,7 +133,7 @@ void Aircraft::update(float dt) {
     acceleration += translational_force / mass;
 
     velocity += acceleration * dt;
-    velocity *= 0.999;
+    // velocity *= 1.0f - dt*0.1;
     glm::vec3 world_velocity = rotm * glm::vec4(velocity, 1.0f);
     position += glm::vec3(world_velocity.x, world_velocity.y, world_velocity.z) * dt / 4.0f;
     acceleration =  glm::vec3(0.0f);
@@ -143,16 +144,15 @@ void Aircraft::update(float dt) {
     torque += glm::cross(elevator.pos, elevator.net_force);
     torque += glm::cross(rudder.pos, rudder.net_force);
 
-    //integrate
     rot_acceleration += glm::inverse(inertia) * torque;
 
-    //FIXME: no inertia here
+    //integrate velocity
     rot_velocity += glm::inverse(inertia) * glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
-    rot_velocity *= 0.97; //some damping
+    rot_velocity *= 1.0f - dt*0.9; //some damping
 
-    float theta = glm::length(rot_velocity);
+    float theta = glm::length(rot_velocity) * dt;
     if(theta > 0.0f) {
-        glm::mat4 frame_rotation = glm::rotate(glm::mat4(1.0f), glm::length(rot_velocity), rot_velocity);
+        glm::mat4 frame_rotation = glm::rotate(glm::mat4(1.0f), theta, rot_velocity * dt);
         rotm = rotm * frame_rotation;
     }
 
