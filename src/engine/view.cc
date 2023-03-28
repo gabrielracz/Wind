@@ -67,7 +67,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-   glfwSwapInterval(0);
+    glfwSwapInterval(0);
 
 	//  Shaders
 	// shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");

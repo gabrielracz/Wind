@@ -144,11 +144,11 @@ void Aircraft::update(float dt) {
     torque += glm::cross(elevator.pos, elevator.net_force);
     torque += glm::cross(rudder.pos, rudder.net_force);
 
-    rot_acceleration += glm::inverse(inertia) * torque;
+    rot_acceleration += glm::inverse(inertia*inertia) * torque;
 
     //integrate velocity
-    rot_velocity += glm::inverse(inertia) * glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
-    rot_velocity *= 1.0f - dt*0.9; //some damping
+    rot_velocity += glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
+    rot_velocity *= 1.0f - dt*1.1; //some damping
 
     float theta = glm::length(rot_velocity) * dt;
     if(theta > 0.0f) {
@@ -157,5 +157,4 @@ void Aircraft::update(float dt) {
     }
 
     rot_acceleration = glm::vec3(0.0f);
-
 }
