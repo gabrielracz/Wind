@@ -69,7 +69,10 @@ void main()
         // Draw character
 		vec4 texture_color = texture2D(onetex, fuv);
 		vec4 color = texture_color * text_color;
-
-		gl_FragColor = vec4(color.r, color.g, color.b, color.a);
+        if(color.a < 1.0f) {
+            gl_FragColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+        } else {
+            gl_FragColor = vec4(color.r, color.g, color.b, color.a);
+        }
     } 
 }

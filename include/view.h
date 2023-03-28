@@ -41,6 +41,7 @@ namespace Colors {
     const glm::vec4 Purple      = {CLAMP(0x67), CLAMP(0x5c), CLAMP(0xff), 1.0f };
     const glm::vec4 Red         = {1.0f, 0.0f, 0.0f, 1.0f};
     const glm::vec4 Green       = {0.0f, 1.0f, 0.0f, 1.0f};
+    const glm::vec4 Slime       = {0xAF/255.0f, 0xAF/255.0f, 0.0f, 1.0f};
     const glm::vec4 Gasoline    = {0x87/255.0f, 0xFF/255.0f, 0xAF/255.0f, 1.0f};
     const glm::vec4 Blue        = {0.0f, 0.0f, 1.0f, 1.0f};
     const glm::vec4 Cyan        = {0.0f, 1.0f, 1.0f, 1.0f};
@@ -74,6 +75,8 @@ class View {
 
 	enum Shaders {
 		S_DEFAULT,
+        S_DITHER,
+        S_DITHER2,
 		S_GRID,
 		S_LIGHT,
 		S_TEXT,
@@ -128,6 +131,7 @@ public:
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);
 
     static bool DRAW_WIREFRAME;
+    static bool DRAW_DEBUG;
 
 private:
 

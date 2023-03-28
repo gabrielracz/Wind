@@ -24,13 +24,12 @@ const mat4 dither_kernel =
 vec4 dither(vec4 color) {
 
     float intensity = (color.r + color.g + color.b)/3.0f;
-    int pixel_x = int(gl_FragCoord.x);
-    int pixel_y = int(gl_FragCoord.y);
+    int pixel_x = int(gl_FragCoord.x)/2;
+    int pixel_y = int(gl_FragCoord.y)/2;
     float threshhold = dither_kernel[pixel_x % 4][pixel_y % 4] + 0.3f;
     vec4 result;
     if(intensity > threshhold){
-        // result = vec4(1.0f);
-        result = color;
+        result = vec4(1.0f);
     } else {
         result = vec4(0.0f);
     }

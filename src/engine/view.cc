@@ -17,6 +17,7 @@
 #include "stb_image.h"
 
 bool View::DRAW_WIREFRAME = false;
+bool View::DRAW_DEBUG = false;
 
 View::View(const std::string& win_title, int win_width, int win_height)
 {
@@ -67,11 +68,12 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glfwSwapInterval(0);
+    // glfwSwapInterval(0);
 
 	//  Shaders
-	// shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
-	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
+	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	shaders[S_DITHER]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
+	shaders[S_DITHER2]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither2.glsl");
 	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
     shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
     shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox.glsl");
@@ -190,7 +192,7 @@ int View::check_controls() {
     // camera.move_left = key_controls[GLFW_KEY_A];
     // camera.move_right = key_controls[GLFW_KEY_D];
 	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
-		View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
+		View::DRAW_DEBUG = !View::DRAW_DEBUG;
 		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
 	}
 	return 0;
@@ -212,20 +214,20 @@ int View::render(double dt)
 
     render_skybox();
     render_terrain();
-    render_aircraft(sim->plane, Colors::Amber);
+    render_aircraft(sim->plane, Colors::White);
 
     // render hud overtop
     char frame_time[32];
     std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -0.79, 0.9, 15, Colors::Green);
+    render_text(frame_time, -0.79, 0.9, 15, Colors::White);
 
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -0.775, 0.8, 15, Colors::Green);
+    render_text(fps, -0.775, 0.8, 15, Colors::White);
 
     char airspeed[32];
     std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
-    render_text(airspeed, 0.775, 0.8, 11, Colors::Green);
+    render_text(airspeed, 0.775, 0.8, 15, Colors::White);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -241,7 +243,7 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
     rotation  = acrft.rotm;
     transform = translation * rotation;
 
-    if(View::DRAW_WIREFRAME) {
+    if(View::DRAW_DEBUG) {
         render_wing_forces(acrft.lwing, transform, rotation);
         render_wing_forces(acrft.rwing, transform, rotation);
         render_wing_forces(acrft.elevator, transform, rotation);
@@ -252,7 +254,7 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
 
     }
 
-    Shader& shd = shaders[S_DEFAULT];
+    Shader& shd = shaders[S_DITHER];
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
@@ -269,7 +271,7 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
 void View::render_terrain() {
     glm::mat4 transform(1.0f);
     glm::vec4 color = Colors::LGrey;
-    Shader& shd = shaders[S_DEFAULT];
+    Shader& shd = shaders[S_DITHER2];
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
@@ -300,16 +302,16 @@ void View::render_terrain() {
 }
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
-
-    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
+    glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
+    glm::vec3 rwing_pos = transform * reverse_z * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
     glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
-    render_line(lift, Colors::Green, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+    render_line(lift, Colors::Green, 0.001f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 
     glm::vec3 drag = rotation * wing.rotm * glm::vec4(wing.drag, 1.0f);
-    render_line(drag, Colors::Pred, 1.5f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+    render_line(drag, Colors::Pred, 0.001f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
 
     glm::vec3 net = rotation * glm::vec4(wing.net_force, 1.0f);
-    render_line(net, Colors::Magenta, 1.5f, rwing_pos + glm::vec3(0.0f, 0.0f, 0.0f));
+    render_line(net, Colors::Magenta, 0.001f, rwing_pos + glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 void View::render_skybox() {
