@@ -15,7 +15,7 @@
 #include <unordered_map>
 
 
-#include "freecamera.h"
+#include "camera.h"
 #include "paths.h"
 #include "shader.h"
 #include "shapes.h"
@@ -30,6 +30,8 @@
 class Application;
 class Simulation;
 
+#define HEXCOLOR(h) {(h&0xFF000000)/255.0f, (h&0x00FF0000)/255.0f, (h&0x0000FF00)/255.0f, 1.0f};
+
 namespace Colors {
     const glm::vec4 None        = {0.0f, 0.0f, 0.0f, 0.0f};
     const glm::vec4 Black       = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -42,6 +44,7 @@ namespace Colors {
     const glm::vec4 LPurple     = {0xA4/255.0f, 0x9B/255.0f, 0xDC/255.0f, 1.0f};
     const glm::vec4 Red         = {1.0f, 0.0f, 0.0f, 1.0f};
     const glm::vec4 Green       = {0.0f, 1.0f, 0.0f, 1.0f};
+    const glm::vec4 GGreen      = {0x21/255.0f, 0xff/255.0f, 0x85/255.0f, 1.0f};
     const glm::vec4 Slime       = {0xAF/255.0f, 0xAF/255.0f, 0.0f, 1.0f};
     const glm::vec4 Gasoline    = {0x87/255.0f, 0xFF/255.0f, 0xAF/255.0f, 1.0f};
     const glm::vec4 Blue        = {0.0f, 0.0f, 1.0f, 1.0f};
@@ -113,7 +116,7 @@ public:
     Application* app;
     Simulation* sim;
 	Window win;
-	FreeCamera camera;
+	Camera camera;
 	Mouse mouse;
 
     std::unordered_map<int, bool> key_controls;

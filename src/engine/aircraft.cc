@@ -127,8 +127,8 @@ void Aircraft::update(float dt) {
     glm::vec3 vdir = glm::normalize(velocity);
     float vmag = glm::length(velocity);
     float drag_constant = 5.0f;
-    float cross_section = 1.0f - glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 0.05f;
-    glm::vec3 fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
+    float cross_section = 1.0f - glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 0.015f;
+    fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
     translational_force += fuselage_drag;
 
     acceleration += translational_force / mass;

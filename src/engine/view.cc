@@ -111,10 +111,11 @@ int View::init(Application* parent, Simulation* model)
                         layout);
     meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
-	glm::vec3 camera_position(0.0f, 1.0f, -1.0f);
+	glm::vec3 camera_position(0.0f, 4.0f, 17.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 	glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
-	camera = FreeCamera(camera_position, camera_front, camera_up);
+	camera = Camera(camera_position, camera_front, camera_up);
+    camera.look_sensitivity = 0.0025;
 
 	//Mouse
 	mouse.xprev = (float) win.width / 2;
@@ -132,6 +133,7 @@ int View::init_controls() {
 	key_controls.insert({GLFW_KEY_K, false});
 	key_controls.insert({GLFW_KEY_L, false});
 	key_controls.insert({GLFW_KEY_J, false});
+	key_controls.insert({GLFW_KEY_0, false});
 	key_controls.insert({GLFW_KEY_U, false});
 	key_controls.insert({GLFW_KEY_O, false});
 
@@ -176,6 +178,22 @@ int View::check_controls() {
         sim->plane.rudder.change_pitch(Pitch::Down);
 	} else {
         sim->plane.rudder.change_pitch(Pitch::Neutral);
+    }
+
+    if(key_controls[GLFW_KEY_I]) {
+        camera.Rotate(MoveDirection::DOWN);
+    }
+    if(key_controls[GLFW_KEY_K]) {
+        camera.Rotate(MoveDirection::UP);
+    }
+    if(key_controls[GLFW_KEY_J]) {
+        camera.Rotate(MoveDirection::RIGHT);
+    }
+    if(key_controls[GLFW_KEY_L]) {
+        camera.Rotate(MoveDirection::LEFT);
+    }
+    if(key_controls[GLFW_KEY_0]) {
+        camera.Rotate(MoveDirection::RESET);
     }
 
 	if(key_controls[GLFW_KEY_ESCAPE]) {
@@ -227,10 +245,11 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
     glm::mat4 translation = glm::translate(aircraft.position);
     glm::mat4& rotation  = aircraft.rotm;
     glm::mat4 transform = translation * rotation;
+    const glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
 
     if(View::DRAW_DEBUG) {
-        render_wing_forces(aircraft.lwing, transform, rotation);
-        render_wing_forces(aircraft.rwing, transform, rotation);
+        render_wing_forces(aircraft.lwing, transform*reverse_z, rotation);
+        render_wing_forces(aircraft.rwing, transform*reverse_z, rotation);
         render_wing_forces(aircraft.elevator, transform, rotation);
         render_wing_forces(aircraft.rudder, transform, rotation);
         render_line(rotation * glm::vec4(aircraft.velocity, 1.0f), Colors::Cyan, 1.0f, aircraft.position);
@@ -285,8 +304,7 @@ void View::render_terrain(const glm::vec4& color) {
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
     // rotate the wing forces by 180 to be relative to +z direction (-z by default)
-    const glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
-    glm::vec3 rwing_pos = transform * reverse_z * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
+    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
     glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
     render_line(lift, Colors::Green, 0.001f, rwing_pos);
 
@@ -319,23 +337,23 @@ void View::render_hud() {
 
     char fps[32];
     std::sprintf(fps, "%-7.4f %3s", app->fps, "fps");
-    render_text(fps, -1, 1, text_size, Colors::Green);
+    render_text(fps, -1, 1, text_size, Colors::GGreen);
 
     char frame_time[32];
     std::sprintf(frame_time, "%-7.4f %3s", framedelta, "ms");
-    render_text(frame_time, -1, row_spacing(2), text_size, Colors::Green);
+    render_text(frame_time, -1, row_spacing(2), text_size, Colors::GGreen);
 
     char airspeed[32];
     std::sprintf(airspeed, "%-7.2f %4s", glm::length(sim->plane.velocity) * 3.6, "km/h");
-    render_text(airspeed, 1, 1, text_size, Colors::Green, TextPosition::TOPRIGHT);
+    render_text(airspeed, 1, 1, text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     char altitude[32];
     std::sprintf(altitude, "%-7.2f %4s", sim->plane.position.y, "m");
-    render_text(altitude, 1, row_spacing(2), text_size, Colors::Green, TextPosition::TOPRIGHT);
+    render_text(altitude, 1, row_spacing(2), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     char gforce[32];
     std::sprintf(gforce, "%-7.2f %4s", glm::length(sim->plane.velocity)*glm::length(sim->plane.rot_velocity)/9.8, "G");
-    render_text(gforce, 1, row_spacing(3), text_size, Colors::Green, TextPosition::TOPRIGHT);
+    render_text(gforce, 1, row_spacing(3), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     char aileron_angle[64];
     char elevator_angle[64];
@@ -346,9 +364,9 @@ void View::render_hud() {
     std::sprintf(rudder_angle  ,"        % 3.2f        ", sim->plane.rudder.pitch * RAD_TO_DEG);
 
     text_size = 13.125;
-    render_text(aileron_angle , 1, row_spacing(-1), text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
-    render_text(elevator_angle, 1, row_spacing(0), text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
-    render_text(rudder_angle  , 1,              -1, text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
+    render_text(aileron_angle , 1, row_spacing(-1), text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
+    render_text(elevator_angle, 1, row_spacing(0), text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
+    render_text(rudder_angle  , 1,              -1, text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
 
 }
 
@@ -462,13 +480,25 @@ void View::callback_mouse_move(GLFWwindow* window, double xpos, double ypos)
 
 	mouse.xprev = xpos;
 	mouse.yprev = ypos;
-	const float sensitivity = 0.001f;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
+	// const float sensitivity = 0.001f;
+	// xoffset *= sensitivity;
+	// yoffset *= sensitivity;
 
+    if(yoffset > 0.0f) {
+        v->camera.Rotate(MoveDirection::DOWN);
+    }
+    else if(yoffset <= 0.0f) {
+        v->camera.Rotate(MoveDirection::UP);
+    }
+    if(xoffset > 0.0f) {
+        v->camera.Rotate(MoveDirection::RIGHT);
+    }
+    else if(xoffset < 0.0f) {
+        v->camera.Rotate(MoveDirection::LEFT);
+    }
 
-    v->camera.StepYaw(xoffset);
-	v->camera.StepPitch(-yoffset);
+    // v->camera.StepYaw(xoffset);
+	// v->camera.StepPitch(-yoffset);
 }
 
 void View::callback_scroll(GLFWwindow* window, double xoffset, double yoffset)

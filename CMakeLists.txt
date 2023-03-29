@@ -6,7 +6,7 @@ project(${PROJ_NAME})
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(COMPILER_FLAGS "")
+SET(COMPILER_FLAGS "-O2")
 
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
@@ -24,6 +24,7 @@ set(HDRS
 	include/shapes.h
     include/perlin.h
     include/aircraft.h
+    include/camera.h
 	include/paths.h
     include/defs.h)
  
@@ -33,7 +34,7 @@ set(SRCS
 	src/engine/view.cc
 	src/engine/simulation.cc
 	src/engine/mesh.cc
-#	src/engine/camera.cc
+	src/engine/camera.cc
 	src/engine/freecamera.cc
 	src/engine/shader.cc
 	src/engine/random.cc
@@ -44,8 +45,8 @@ set(SRCS
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/path_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/paths.h)
 
 # Add executable based on the source files
-add_executable(${PROJ_NAME} ${HDRS} ${SRCS} )
 add_definitions(${COMPILER_FLAGS})
+add_executable(${PROJ_NAME} ${HDRS} ${SRCS} )
 
 # Directories to include for header files, so that the compiler can find
 # path_config.h
