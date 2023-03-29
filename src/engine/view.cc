@@ -213,21 +213,26 @@ int View::render(double dt)
     render_aircraft(sim->plane, Colors::White);
 
     // render hud overtop
-    char frame_time[32];
-    std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -1, 1, 15, Colors::Green);
+
+
+    float text_size = 15;
+    float second_row = 1-(text_size/((float)(win.height)/2.0f) * 2.0f);
 
     char fps[32];
-    std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -1, 1-(15/((float)(win.height)/2.0f) * 2.0f), 15, Colors::Green);
+    std::sprintf(fps, "%.4f  fps", app->fps);
+    render_text(fps, -1, 1, text_size, Colors::Green);
+
+    char frame_time[32];
+    std::sprintf(frame_time, "%.4f ms", dt);
+    render_text(frame_time, -1, second_row, text_size, Colors::Green);
 
     char airspeed[32];
     std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
-    render_text(airspeed, 0.775, 0.8, 15, Colors::Green);
+    render_text(airspeed, 1, 1, text_size, Colors::Green, TextPosition::TOPRIGHT);
 
     char altitude[32];
     std::sprintf(altitude, "%.2f  m", sim->plane.position.y);
-    render_text(altitude, 0.775, 0.7, 15, Colors::Green);
+    render_text(altitude, 1, second_row, text_size, Colors::Green, TextPosition::TOPRIGHT);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -341,19 +346,27 @@ void View::render_text(const std::string& text, float x, float y, float size, co
 	float sy = size;
 
     float asp = 1.0f/((float)win.width/(float)win.height);
+    
+    float ndc_width_distance = (width/((float)(win.width)/2));
+    float ndc_height_distance = (size/((float)win.height/2));
 
+    // change the anchor point of the text quad
     glm::mat4 translation;
     switch(text_position) {
         case TOPLEFT:
-            translation = glm::translate(glm::vec3(x+(width/((float)(win.width)/2)), y-(size/((float)win.height/2)), 0.0f));
+            translation = glm::translate(glm::vec3(x + ndc_width_distance, y - ndc_height_distance, 0.0f));
             break;
         case BOTTOMLEFT:
+            translation = glm::translate(glm::vec3(x + ndc_width_distance, y + ndc_height_distance, 0.0f));
             break;
         case TOPRIGHT:
+            translation = glm::translate(glm::vec3(x - ndc_width_distance, y - ndc_height_distance, 0.0f));
             break;
         case BOTTOMRIGHT:
+            translation = glm::translate(glm::vec3(x - ndc_width_distance, y + ndc_height_distance, 0.0f));
             break;
         case CENTER:
+            translation = glm::translate(glm::vec3(x, y, 0.0f));
             break;
     }
 
