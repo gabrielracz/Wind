@@ -5,15 +5,16 @@
 #include "stb_image.h"
 #include <iostream>
 #include <cmath>
+#include <numeric>
 #include <paths.h>
 
 const size_t N = 128;
 
 int Simulation::init() {
     gen_terrain();
-    plane = Aircraft(glm::vec3(0.0f, 50.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
+    plane = Aircraft(glm::vec3(0.0f, 130.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
     plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
-    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 65.0f, 0.0f);
+    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 85.0f, 0.0f);
 	return 0;
 }
 
@@ -32,35 +33,55 @@ int Simulation::update(double dt) {
 void Simulation::gen_terrain() {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-	int map_width, map_height, n_channels;
-	unsigned char* heightmap = stbi_load(RESOURCES_DIRECTORY"/MountainRangeHeightMap.png", &map_width, &map_height, &n_channels, 0);
-	if (!heightmap) {
-		printf("Error: loading heightmap\n");
-	}
-    std::cout << "Height Map: " << map_width << "x" << map_height << "  n_channels: " << n_channels<< std::endl;
+	int map_width, map_height;
+    int n_channels = 1;
+	// unsigned char* heightmap = stbi_load(RESOURCES_DIRECTORY"/heightmap.png", &map_width, &map_height, &n_channels, 0);
+	// if (!heightmap) {
+	// 	printf("Error: loading heightmap\n");
+	// }
+    // std::cout << "Height Map: " << map_width << "x" << map_height << "  n_channels: " << n_channels<< std::endl;
 
 	perlinit(1337);
     float min_height = -10.0f;
     float max_height = 50.0f;
 	float grid_size = 2500.0f;
-	// float grid_step = map_width/grid_size;
-	float grid_step = 4.0f;
+	// float grid_size = map_width;
+	float grid_step = 2.0f;
     unsigned int grid_width = grid_size/grid_step;
+
 	int xcnt = 0;
 	int zcnt = 0;
     int pscale = grid_size/2.0f;
 	for(float z = -grid_size/2.0f; z < grid_size/2.0f; z += grid_step) {
 		for(float x = -grid_size/2.0f; x < grid_size/2.0f; x += grid_step) {
 			//position
-            unsigned int hz = (z+grid_size/2.0f)*map_width;
-            unsigned int hx = (x+grid_size/2.0f);
-			unsigned char pGIXel = heightmap[hx + hz];
-            float height_scale = pGIXel/255.0f;
-            float height = max_height * height_scale;
+            // unsigned int hz = (z+grid_size/2.0f + 1)*map_width;
+            // unsigned int hx = (x*3+grid_size/2.0f + 1);
+
+            // unsigned char* texel = heightmap + glm::clamp((int)(x + grid_width * z) * n_channels, 0, map_width*map_height);
+            // // raw height at coordinate
+            // unsigned char y = texel[0];
+
+			// unsigned char pixel = heightmap[hx + hz];
+            // float height_scale = pixel/255.0f;
+            // std::cout << (int)pixel << std::endl;
+            // float height = max_height * height_scale;
             // float y = min_height + height;
-            float perl1 = perlin((x + pscale)*0.03f, (z + pscale)*0.03f) * 30.0f;
-            float perl2 = perlin((x + pscale)*0.01f, (z + pscale)*0.01f) * 10.0f;
-            float y = perl1 + perl2;
+
+            /*                    subsample rate (lower is smoother)     amplitude*/
+            const auto ridge = [](float p, float height){
+                return abs(p)*-1 + height;
+            };
+            float perlin_samples[] = {
+                perlin((x + pscale)*0.005f, (z + pscale)*0.005f) * 100.0f,
+                perlin((x + pscale)*0.01f, (z + pscale)*0.01f) * 100.0f,
+                ridge(perlin((x + pscale)*0.025f, (z + pscale)*0.025f) * 30.0f, 30.0f),
+                perlin((x + pscale)*0.05f, (z + pscale)*0.05f) * 5.0f,
+            };
+
+            float y = 0;
+            for(int i = 0; i < sizeof(perlin_samples)/sizeof(float); i++)
+                y += perlin_samples[i];
 
 			glm::vec3 p(x, y, z);
 			//texture coord

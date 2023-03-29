@@ -39,6 +39,7 @@ namespace Colors {
     const glm::vec4 White       = {1.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Magenta     = {1.0f, 0.0f, 1.0f, 1.0f};
     const glm::vec4 Purple      = {CLAMP(0x67), CLAMP(0x5c), CLAMP(0xff), 1.0f };
+    const glm::vec4 LPurple     = {0xA4/255.0f, 0x9B/255.0f, 0xDC/255.0f, 1.0f};
     const glm::vec4 Red         = {1.0f, 0.0f, 0.0f, 1.0f};
     const glm::vec4 Green       = {0.0f, 1.0f, 0.0f, 1.0f};
     const glm::vec4 Slime       = {0xAF/255.0f, 0xAF/255.0f, 0.0f, 1.0f};
@@ -47,6 +48,7 @@ namespace Colors {
     const glm::vec4 Cyan        = {0.0f, 1.0f, 1.0f, 1.0f};
     const glm::vec4 Stormy      = {41/255.0f, 0x4F/255.0f, 0x4F/255.0f, 1.0f};
     const glm::vec4 Amber       = {0xFF/255.0f, 0xB0/255.0f, 0.0f, 1.0f};
+    const glm::vec4 Orange      = {0xFF/255.0f, 0x87/255.0f, 0.0f, 1.0f};
     const glm::vec4 Pred        = {0xff/255.0f, 0x00/255.0f, 0x5d/255.0f, 1.0f};
     const glm::vec4 Brown       = {0x76/255.0f, 0x44/255.0f, 0x07/255.0f, 1.0f};
 
@@ -99,6 +101,14 @@ class View {
         : key_code(key), hold(hld){}
     }ControlKey;
 
+    enum TextPosition {
+        TOPLEFT,
+        BOTTOMLEFT,
+        TOPRIGHT,
+        BOTTOMRIGHT,
+        CENTER
+    };
+
 public:
     Application* app;
     Simulation* sim;
@@ -125,8 +135,8 @@ public:
 	int render(double dt);
     void render_aircraft(Aircraft& ent, const glm::vec4& color);
     void render_skybox();
-    void render_terrain();
-	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color);
+    void render_terrain(const glm::vec4& color);
+	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position = TextPosition::TOPLEFT);
     void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);
 

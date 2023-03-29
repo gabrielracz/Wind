@@ -68,7 +68,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    // glfwSwapInterval(0);
+	 glfwSwapInterval(0);
 
 	//  Shaders
 	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
@@ -82,7 +82,6 @@ int View::init(Application* parent, Simulation* model)
     textures[T_CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
 	textures[T_CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
 
-
     //right, left, top, bottom, front, back
 #define SKYBOX_NAME "sunnysky"
     std::vector<std::string> skybox_faces({
@@ -93,11 +92,8 @@ int View::init(Application* parent, Simulation* model)
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_rt.jpg",
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_lf.jpg"
     });
-    stbi_set_flip_vertically_on_load(0);
-    textures[T_SKYBOX]   = load_cubemap(skybox_faces);
+    textures[T_SKYBOX] = load_cubemap(skybox_faces);
     skybox_vao = init_cube();
-
-	
 
     //  Raw OpenGL buffers
     text_vao = init_quad();
@@ -126,7 +122,7 @@ int View::init(Application* parent, Simulation* model)
 
 	init_controls();
 
-    light_pos = glm::vec3(4.0f, 100.0f, 0.0f);
+    light_pos = glm::vec3(4.0f, 170.0f, 0.0f);
     camera.target = &sim->plane;
 	return 0;
 }
@@ -213,45 +209,44 @@ int View::render(double dt)
     camera.Update();
 
     render_skybox();
-    render_terrain();
+    render_terrain(Colors::LGrey);
     render_aircraft(sim->plane, Colors::White);
 
     // render hud overtop
     char frame_time[32];
     std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -0.79, 0.9, 15, Colors::White);
+    render_text(frame_time, -1, 1, 15, Colors::Green);
 
     char fps[32];
     std::sprintf(fps, "%.2f  fps", app->fps);
-    render_text(fps, -0.775, 0.8, 15, Colors::White);
+    render_text(fps, -1, 1-(15/((float)(win.height)/2.0f) * 2.0f), 15, Colors::Green);
 
     char airspeed[32];
     std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
-    render_text(airspeed, 0.775, 0.8, 15, Colors::White);
+    render_text(airspeed, 0.775, 0.8, 15, Colors::Green);
+
+    char altitude[32];
+    std::sprintf(altitude, "%.2f  m", sim->plane.position.y);
+    render_text(altitude, 0.775, 0.7, 15, Colors::Green);
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
 }
 
-void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
+void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
 {
-    glm::mat4 transform(1.0f);
-    glm::mat4 translation(1.0f);
-    glm::mat4 rotation(1.0f);
-    //pitch, yaw, roll to rotation matrix
-    translation = glm::translate(glm::mat4(1.0f), acrft.position);
-    rotation  = acrft.rotm;
-    transform = translation * rotation;
+    glm::mat4 translation = glm::translate(aircraft.position);
+    glm::mat4& rotation  = aircraft.rotm;
+    glm::mat4 transform = translation * rotation;
 
     if(View::DRAW_DEBUG) {
-        render_wing_forces(acrft.lwing, transform, rotation);
-        render_wing_forces(acrft.rwing, transform, rotation);
-        render_wing_forces(acrft.elevator, transform, rotation);
-        render_wing_forces(acrft.rudder, transform, rotation);
-        render_line(rotation * glm::vec4(acrft.velocity, 1.0f), Colors::Cyan, 1.0f, acrft.position);
-        if(acrft.throttle)
-            render_line(rotation * glm::vec4(acrft.thrust, 1.0f), Colors::Green, 1.0f, acrft.position);
-
+        render_wing_forces(aircraft.lwing, transform, rotation);
+        render_wing_forces(aircraft.rwing, transform, rotation);
+        render_wing_forces(aircraft.elevator, transform, rotation);
+        render_wing_forces(aircraft.rudder, transform, rotation);
+        render_line(rotation * glm::vec4(aircraft.velocity, 1.0f), Colors::Cyan, 1.0f, aircraft.position);
+        if(aircraft.throttle)
+            render_line(rotation * glm::vec4(aircraft.thrust, 1.0f), Colors::Green, 1.0f, aircraft.position);
     }
 
     Shader& shd = shaders[S_DITHER];
@@ -263,14 +258,12 @@ void View::render_aircraft(Aircraft& acrft, const glm::vec4& color)
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
 
-    Mesh mesh = meshes[acrft.id];
+    Mesh& mesh = meshes[aircraft.id];
     mesh.Draw(shd);
-
 }
 
-void View::render_terrain() {
+void View::render_terrain(const glm::vec4& color) {
     glm::mat4 transform(1.0f);
-    glm::vec4 color = Colors::LGrey;
     Shader& shd = shaders[S_DITHER2];
     shd.use();
     shd.SetUniform4f(color, "base_color");
@@ -302,7 +295,8 @@ void View::render_terrain() {
 }
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
-    glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
+    // rotate the wing forces by 180 to be relative to +z direction (-z by default)
+    const glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
     glm::vec3 rwing_pos = transform * reverse_z * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
     glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
     render_line(lift, Colors::Green, 0.001f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
@@ -318,7 +312,7 @@ void View::render_skybox() {
     glDepthMask(false);
     Shader& shd = shaders[S_SKYBOX];
     shd.use();
-    shd.SetUniform4m(glm::scale(glm::mat4(1.0f), glm::vec3(300.0f)), "transformation");
+    shd.SetUniform4m(glm::scale(glm::vec3(300.0f)), "transformation");
     shd.SetUniform4m(camera.view, "view");
     shd.SetUniform4m(camera.projection, "projection");
     glBindVertexArray(skybox_vao);
@@ -327,7 +321,7 @@ void View::render_skybox() {
     glDepthMask(true);
 }
 
-void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color)
+void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position)
 {
     Shader& shd = shaders[S_TEXT];
     shd.use();
@@ -341,15 +335,29 @@ void View::render_text(const std::string& text, float x, float y, float size, co
     int len = text.size();
     shd.SetUniform1i(len, "text_len");
 
+    //chars are 8x15 pixels
     float width = len*8/15.0f*(size);
 	float sx = width;
 	float sy = size;
 
     float asp = 1.0f/((float)win.width/(float)win.height);
-    glm::mat4 transformation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
-    transformation_matrix = glm::scale(transformation_matrix, glm::vec3(sx, sy, 1.0f));
 
-    glm::mat4 view_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(asp, 1.0f, 1.0f));
+    glm::mat4 translation;
+    switch(text_position) {
+        case TOPLEFT:
+            translation = glm::translate(glm::vec3(x+(width/((float)(win.width)/2)), y-(size/((float)win.height/2)), 0.0f));
+            break;
+        case BOTTOMLEFT:
+            break;
+        case TOPRIGHT:
+            break;
+        case BOTTOMRIGHT:
+            break;
+        case CENTER:
+            break;
+    }
+
+    glm::mat4 transformation_matrix = translation * glm::scale(glm::vec3(sx, sy, 1.0f));
 
     shd.SetUniform4m(transformation_matrix, "transformation_matrix");
 
@@ -583,6 +591,7 @@ Texture View::load_cubemap(std::vector<std::string>& faces) {
 	glGenTextures(1, &tex_id);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id);
 
+    stbi_set_flip_vertically_on_load(0);
 	int w, h, n_channels;
 	for(int i = 0; i < faces.size(); i++) {
 		unsigned char* data = stbi_load(faces[i].c_str(), &w, &h, &n_channels, 0);

@@ -21,6 +21,14 @@ const mat4 dither_kernel =
         15, 7, 13, 5
     ) * 1.0f/16.0f;
 
+const mat4 dither_kernel_offset = 
+    mat4(
+        10, 2, 8, 0,
+        6, 14, 4, 12,
+        9, 1, 11, 3,
+        5, 13, 7, 15
+    ) * 1.0f/16.0f;
+
 vec4 dither(vec4 color) {
 
     float intensity = (color.r + color.g + color.b)/3.0f;
