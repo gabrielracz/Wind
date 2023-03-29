@@ -29,7 +29,8 @@ vec4 dither(vec4 color) {
     float threshhold = dither_kernel[pixel_x % 4][pixel_y % 4] + 0.3f;
     vec4 result;
     if(intensity > threshhold){
-        result = color;
+        // result = color;
+        result = vec4(1.0f);
     } else {
         result = vec4(0.0f);
     }

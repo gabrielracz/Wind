@@ -68,7 +68,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-	 glfwSwapInterval(0);
+	//  glfwSwapInterval(0);
 
 	//  Shaders
 	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
@@ -197,6 +197,7 @@ int View::check_controls() {
 int View::render(double dt)
 {
 	glfwPollEvents();
+    framedelta = dt;
 	check_controls();
 
 	if(glfwWindowShouldClose(win.ptr))
@@ -209,30 +210,13 @@ int View::render(double dt)
     camera.Update();
 
     render_skybox();
-    render_terrain(Colors::LGrey);
+    render_terrain(Colors::Grey);
     render_aircraft(sim->plane, Colors::White);
 
     // render hud overtop
 
 
-    float text_size = 15;
-    float second_row = 1-(text_size/((float)(win.height)/2.0f) * 2.0f);
-
-    char fps[32];
-    std::sprintf(fps, "%.4f  fps", app->fps);
-    render_text(fps, -1, 1, text_size, Colors::Green);
-
-    char frame_time[32];
-    std::sprintf(frame_time, "%.4f ms", dt);
-    render_text(frame_time, -1, second_row, text_size, Colors::Green);
-
-    char airspeed[32];
-    std::sprintf(airspeed, "%.2f  km/h", glm::length(sim->plane.velocity) * 3.6);
-    render_text(airspeed, 1, 1, text_size, Colors::Green, TextPosition::TOPRIGHT);
-
-    char altitude[32];
-    std::sprintf(altitude, "%.2f  m", sim->plane.position.y);
-    render_text(altitude, 1, second_row, text_size, Colors::Green, TextPosition::TOPRIGHT);
+    render_hud();
 
 	glfwSwapBuffers(win.ptr);
 	return 0;
@@ -250,8 +234,8 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
         render_wing_forces(aircraft.elevator, transform, rotation);
         render_wing_forces(aircraft.rudder, transform, rotation);
         render_line(rotation * glm::vec4(aircraft.velocity, 1.0f), Colors::Cyan, 1.0f, aircraft.position);
-        if(aircraft.throttle)
-            render_line(rotation * glm::vec4(aircraft.thrust, 1.0f), Colors::Green, 1.0f, aircraft.position);
+        // if(aircraft.throttle)
+        //     render_line(rotation * glm::vec4(aircraft.thrust, 1.0f), Colors::Green, 1.0f, aircraft.position);
     }
 
     Shader& shd = shaders[S_DITHER];
@@ -304,13 +288,13 @@ void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation
     const glm::mat4 reverse_z = glm::rotate(glm::pi<float>(), glm::vec3(0.f, 1.f, 0.f));
     glm::vec3 rwing_pos = transform * reverse_z * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
     glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
-    render_line(lift, Colors::Green, 0.001f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+    render_line(lift, Colors::Green, 0.001f, rwing_pos);
 
     glm::vec3 drag = rotation * wing.rotm * glm::vec4(wing.drag, 1.0f);
-    render_line(drag, Colors::Pred, 0.001f, rwing_pos + glm::vec3(0.0f, 0.3f, 0.0f));
+    render_line(drag, Colors::Pred, 0.001f, rwing_pos);
 
     glm::vec3 net = rotation * glm::vec4(wing.net_force, 1.0f);
-    render_line(net, Colors::Magenta, 0.001f, rwing_pos + glm::vec3(0.0f, 0.0f, 0.0f));
+    render_line(net, Colors::Magenta, 0.001f, rwing_pos);
 }
 
 void View::render_skybox() {
@@ -324,6 +308,48 @@ void View::render_skybox() {
     glBindTexture(GL_TEXTURE_CUBE_MAP, textures[T_SKYBOX].id);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(true);
+}
+
+void View::render_hud() {
+    float text_size = 15;
+    const auto row_spacing = [&] (float row) {
+        float start = row <= 0.0f ? -1.0f : 1.0f;
+        return start-(text_size/((float)(win.height)/2.0f) * (2.0f * (row-1.0f)));
+    };
+
+    char fps[32];
+    std::sprintf(fps, "%-7.4f %3s", app->fps, "fps");
+    render_text(fps, -1, 1, text_size, Colors::Green);
+
+    char frame_time[32];
+    std::sprintf(frame_time, "%-7.4f %3s", framedelta, "ms");
+    render_text(frame_time, -1, row_spacing(2), text_size, Colors::Green);
+
+    char airspeed[32];
+    std::sprintf(airspeed, "%-7.2f %4s", glm::length(sim->plane.velocity) * 3.6, "km/h");
+    render_text(airspeed, 1, 1, text_size, Colors::Green, TextPosition::TOPRIGHT);
+
+    char altitude[32];
+    std::sprintf(altitude, "%-7.2f %4s", sim->plane.position.y, "m");
+    render_text(altitude, 1, row_spacing(2), text_size, Colors::Green, TextPosition::TOPRIGHT);
+
+    char gforce[32];
+    std::sprintf(gforce, "%-7.2f %4s", glm::length(sim->plane.velocity)*glm::length(sim->plane.rot_velocity)/9.8, "G");
+    render_text(gforce, 1, row_spacing(3), text_size, Colors::Green, TextPosition::TOPRIGHT);
+
+    char aileron_angle[64];
+    char elevator_angle[64];
+    char rudder_angle[64];
+    char spacer[64];
+    std::sprintf(aileron_angle ,"% 3.2f          % 3.2f ", sim->plane.lwing.pitch * RAD_TO_DEG, sim->plane.rwing.pitch * RAD_TO_DEG);
+    std::sprintf(elevator_angle,"    % 3.2f   % 3.2f    ", sim->plane.elevator.pitch * RAD_TO_DEG, sim->plane.elevator.pitch * RAD_TO_DEG);
+    std::sprintf(rudder_angle  ,"        % 3.2f        ", sim->plane.rudder.pitch * RAD_TO_DEG);
+
+    text_size = 13.125;
+    render_text(aileron_angle , 1, row_spacing(-1), text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
+    render_text(elevator_angle, 1, row_spacing(0), text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
+    render_text(rudder_angle  , 1,              -1, text_size, Colors::Green, TextPosition::BOTTOMRIGHT);
+
 }
 
 void View::render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position)

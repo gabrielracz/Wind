@@ -108,6 +108,7 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
 
 void Aircraft::update(float dt) {
     if(dt == 0.0f) {return;}
+    rot_acceleration = glm::vec3(0.0f);
 
     glm::vec3 air = -velocity;
     lwing.solve(air);
@@ -155,6 +156,4 @@ void Aircraft::update(float dt) {
         glm::mat4 frame_rotation = glm::rotate(glm::mat4(1.0f), theta, rot_velocity * dt);
         rotm = rotm * frame_rotation;
     }
-
-    rot_acceleration = glm::vec3(0.0f);
 }

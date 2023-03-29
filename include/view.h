@@ -23,7 +23,7 @@
 #include "mesh.h"
 #include "aircraft.h"
 
-
+#define RAD_TO_DEG 180 / glm::pi<float>()
 #define NUM_SHADERS 10
 #define CLAMP(f) f / 255.0f
 
@@ -127,6 +127,8 @@ public:
     VertexArray line_vao;
     Mesh meshes[N_ENTITY_TYPES];
 
+    float framedelta = 0.0f;
+
 	View(const std::string& win_title, int win_width, int win_height);
 	View();
 	int init(Application* app, Simulation* model);
@@ -136,6 +138,7 @@ public:
     void render_aircraft(Aircraft& ent, const glm::vec4& color);
     void render_skybox();
     void render_terrain(const glm::vec4& color);
+    void render_hud();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position = TextPosition::TOPLEFT);
     void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);
