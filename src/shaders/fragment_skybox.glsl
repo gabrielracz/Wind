@@ -16,7 +16,7 @@ vec4 dither(vec4 color) {
     float intensity = (color.r + color.g + color.b)/3.0f;
     int pixel_x = int(gl_FragCoord.x)/2;
     int pixel_y = int(gl_FragCoord.y)/2;
-    float threshhold = dither_kernel[pixel_x % 4][pixel_y % 4] + 0.5f;
+    float threshhold = dither_kernel[pixel_x % 4][pixel_y % 4] + 0.3f;
     vec4 result;
     if(intensity > threshhold){
         //result = vec4(0x69/255.0f, 0xC0/255.0f, 0xDF/255.0f, 1.0f);

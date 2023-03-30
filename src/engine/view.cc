@@ -83,7 +83,7 @@ int View::init(Application* parent, Simulation* model)
 	textures[T_CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
 
     //right, left, top, bottom, front, back
-#define SKYBOX_NAME "sunnysky"
+#define SKYBOX_NAME "wrath"
     std::vector<std::string> skybox_faces({
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_ft.jpg",
           RESOURCES_DIRECTORY"/" SKYBOX_NAME"/" SKYBOX_NAME "_bk.jpg",
@@ -115,7 +115,7 @@ int View::init(Application* parent, Simulation* model)
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 	glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 	camera = Camera(camera_position, camera_front, camera_up);
-    camera.look_sensitivity = 0.0025;
+    camera.look_sensitivity = 0.004;
 
 	//Mouse
 	mouse.xprev = (float) win.width / 2;
@@ -123,7 +123,7 @@ int View::init(Application* parent, Simulation* model)
 
 	init_controls();
 
-    light_pos = glm::vec3(4.0f, 170.0f, 0.0f);
+    light_pos = glm::vec3(1350.0f, 800.0f, 1350.0f);
     camera.target = &sim->plane;
 	return 0;
 }
@@ -197,7 +197,9 @@ int View::check_controls() {
     }
 
 	if(key_controls[GLFW_KEY_ESCAPE]) {
-		glfwSetWindowShouldClose(win.ptr, true);
+        sim->paused = !sim->paused;
+        key_controls[GLFW_KEY_ESCAPE] = false;
+		// glfwSetWindowShouldClose(win.ptr, true);
 	}
 
     sim->plane.throttle = !key_controls[GLFW_KEY_SPACE];
@@ -207,7 +209,9 @@ int View::check_controls() {
     // camera.move_right = key_controls[GLFW_KEY_D];
 	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
 		View::DRAW_DEBUG = !View::DRAW_DEBUG;
+		// View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
 		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
+
 	}
 	return 0;
 }
@@ -232,8 +236,6 @@ int View::render(double dt)
     render_aircraft(sim->plane, Colors::White);
 
     // render hud overtop
-
-
     render_hud();
 
 	glfwSwapBuffers(win.ptr);
@@ -352,9 +354,10 @@ void View::render_hud() {
     render_text(altitude, 1, row_spacing(2), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     char gforce[32];
-    std::sprintf(gforce, "%-7.2f %4s", glm::length(sim->plane.velocity)*glm::length(sim->plane.rot_velocity)/9.8, "G");
+    std::sprintf(gforce, "%-7.2f %4s", (sim->plane.acceleration.y + glm::length(sim->plane.velocity)*sim->plane.rot_velocity.x)/9.8, "G");
     render_text(gforce, 1, row_spacing(3), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
+    //display control surfaces' angles
     char aileron_angle[64];
     char elevator_angle[64];
     char rudder_angle[64];
@@ -484,6 +487,7 @@ void View::callback_mouse_move(GLFWwindow* window, double xpos, double ypos)
 	// xoffset *= sensitivity;
 	// yoffset *= sensitivity;
 
+    /*
     if(yoffset > 0.0f) {
         v->camera.Rotate(MoveDirection::DOWN);
     }
@@ -496,6 +500,7 @@ void View::callback_mouse_move(GLFWwindow* window, double xpos, double ypos)
     else if(xoffset < 0.0f) {
         v->camera.Rotate(MoveDirection::LEFT);
     }
+    */
 
     // v->camera.StepYaw(xoffset);
 	// v->camera.StepPitch(-yoffset);

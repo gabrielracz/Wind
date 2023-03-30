@@ -72,10 +72,10 @@ void Camera::Rotate(MoveDirection d) {
 
     switch(d) {
         case MoveDirection::UP:
-            rotation_amount.x += -theta;
+            rotation_amount.x += theta;
             break;
         case MoveDirection::DOWN:
-            rotation_amount.x += theta;
+            rotation_amount.x += -theta;
             break;
         case MoveDirection::LEFT:
             rotation_amount.y += theta;

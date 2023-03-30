@@ -1,4 +1,5 @@
 #include "aircraft.h"
+#include "simulation.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/vector_angle.hpp>
@@ -18,7 +19,7 @@ Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dih
     update_rotation();
     //  lift distribution = point along span where lift is applied (averaged).
     //  lift is usually distributed at one quarter chord length from the leading edge.
-    center_of_pressure = rotm * glm::vec4(span*lift_distribution, span*sin(dihedral), chord*0.25, 1.0f);
+    center_of_pressure = rotm * glm::vec4(span*lift_distribution, 0.0f, chord*0.25, 1.0f);
 }
 
 void Wing::update_rotation() {
@@ -101,14 +102,16 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.15),
     lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.15), //neg dihedral
 	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.00025f, 0.0f, 0.0f),
-	rudder(glm::vec3(0.0f, 0.0f, 4.5f), 1.5f, 1.0f, 0.0f, M_PI_2)
+	rudder(glm::vec3(0.0f, 0.0f, 4.5f), -1.5f, 1.0f, 0.0f, M_PI_2)
 {
 
 }
 
 void Aircraft::update(float dt) {
     if(dt == 0.0f) {return;}
+
     rot_acceleration = glm::vec3(0.0f);
+    acceleration =  glm::vec3(0.0f);
 
     glm::vec3 air = -velocity;
     lwing.solve(air);
@@ -123,21 +126,22 @@ void Aircraft::update(float dt) {
     translational_force += rudder.net_force;
     if(throttle)
         translational_force += thrust;
+    if(velocity != glm::vec3(0.0f)){
+        glm::vec3 vdir = glm::normalize(velocity);
+        float vmag = glm::length(velocity);
+        float drag_constant = 0.2f;
+        float fuselage_length = 8.0f;
+        float cross_section = fuselage_length - fuselage_length*glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 1.0f;
+        glm::vec3 fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
+        translational_force += fuselage_drag;
+    }
 
-    glm::vec3 vdir = glm::normalize(velocity);
-    float vmag = glm::length(velocity);
-    float drag_constant = 5.0f;
-    float cross_section = 1.0f - glm::dot(vdir, glm::vec3(0.0f, 0.0f, -1.0f)) + 0.015f;
-    fuselage_drag = -vdir * vmag*vmag * drag_constant * cross_section;
-    translational_force += fuselage_drag;
-
-    acceleration += translational_force / mass;
+    acceleration = translational_force / mass;
+    acceleration += glm::vec3(glm::inverse(rotm) * Simulation::gravity);
 
     velocity += acceleration * dt;
-    // velocity *= 1.0f - dt*0.1;
     glm::vec3 world_velocity = rotm * glm::vec4(velocity, 1.0f);
     position += glm::vec3(world_velocity.x, world_velocity.y, world_velocity.z) * dt / 4.0f;
-    acceleration =  glm::vec3(0.0f);
 
     glm::vec3 torque;
     torque += glm::cross(rwing.pos + rwing.center_of_pressure, rwing.net_force);
@@ -145,7 +149,7 @@ void Aircraft::update(float dt) {
     torque += glm::cross(elevator.pos, elevator.net_force);
     torque += glm::cross(rudder.pos, rudder.net_force);
 
-    rot_acceleration += glm::inverse(inertia*inertia) * torque;
+    rot_acceleration = glm::inverse(inertia*inertia) * torque;
 
     //integrate velocity
     rot_velocity += glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
@@ -156,4 +160,5 @@ void Aircraft::update(float dt) {
         glm::mat4 frame_rotation = glm::rotate(glm::mat4(1.0f), theta, rot_velocity * dt);
         rotm = rotm * frame_rotation;
     }
+
 }

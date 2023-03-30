@@ -78,7 +78,6 @@ public:
     //         );
 
 
-    //C172
     float mass = 1700 * LBS_TO_KG;
     // pitch   yaw  roll
     glm::mat3 inertia = glm::mat3(
@@ -86,6 +85,12 @@ public:
                0.0f, 967.0f,   0.0f,
                0.0f,     0.0,    948.0f
     ) * LBS_TO_KG;
+    //C172
+    // glm::mat3 inertia = glm::mat3(
+    //          1346.0f,   0.0f,   0.0f,
+    //            0.0f, 1967.0f,   0.0f,
+    //            0.0f,     0.0,    948.0f
+    // ) * LBS_TO_KG;
 
     bool throttle;
 

@@ -9,20 +9,21 @@
 #include <paths.h>
 
 const size_t N = 128;
-
+const glm::vec4 Simulation::gravity = {0.0f, -9.8f, 0.0f, 0.0f};
 int Simulation::init() {
     gen_terrain();
     plane = Aircraft(glm::vec3(0.0f, 130.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
-    plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
-    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, 85.0f, 0.0f);
+    // plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
+    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, -85.0f, 0.0f);
 	return 0;
 }
 
 int Simulation::update(double dt) {
     elapsed += dt;
+    if(paused) {return 1;}
 
     glm::vec4 gravity(0.0f, -9.8f, 0.0f, 0.0f);
-    glm::vec4 thrust(0.0f, 0.0f, -2000.0f, 0.0f);
+    glm::vec4 thrust(0.0f, 0.0f, -2500.0f, 0.0f);
     plane.acceleration = glm::inverse(plane.rotm) * gravity;
     plane.thrust = thrust;
 
