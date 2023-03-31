@@ -136,6 +136,9 @@ int View::init_controls() {
 	key_controls.insert({GLFW_KEY_0, false});
 	key_controls.insert({GLFW_KEY_U, false});
 	key_controls.insert({GLFW_KEY_O, false});
+    key_controls.insert({GLFW_KEY_SPACE, false});
+    key_controls.insert({GLFW_KEY_LEFT_SHIFT, false});
+    key_controls.insert({GLFW_KEY_R, false});
 
 	key_controls.insert({GLFW_KEY_W, false});
 	key_controls.insert({GLFW_KEY_A, false});
@@ -201,8 +204,19 @@ int View::check_controls() {
         key_controls[GLFW_KEY_ESCAPE] = false;
 		// glfwSetWindowShouldClose(win.ptr, true);
 	}
+    if(key_controls[GLFW_KEY_SPACE]) {
+        camera.locked = !camera.locked;
+        // camera.up = camera.plane_up;
+        key_controls[GLFW_KEY_SPACE] = false;
+    }
+    if(key_controls[GLFW_KEY_R]) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glfwSwapBuffers(win.ptr);
+        sim->init();
+        key_controls[GLFW_KEY_R] = false;
+    }
 
-    sim->plane.throttle = !key_controls[GLFW_KEY_SPACE];
+    sim->plane.throttle = !key_controls[GLFW_KEY_LEFT_SHIFT];
 	// camera.move_forward = key_controls[GLFW_KEY_W];
     // camera.move_back = key_controls[GLFW_KEY_S];
     // camera.move_left = key_controls[GLFW_KEY_A];
@@ -225,7 +239,7 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::Black;
+    glm::vec4 clr = Colors::Grey;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // camera.position = glm::vec3(0.0f, 4.0f, -15.0f) + sim->plane.position;
@@ -354,7 +368,8 @@ void View::render_hud() {
     render_text(altitude, 1, row_spacing(2), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     char gforce[32];
-    std::sprintf(gforce, "%-7.2f %4s", (sim->plane.acceleration.y + glm::length(sim->plane.velocity)*sim->plane.rot_velocity.x)/9.8, "G");
+    glm::vec3 r = sim->plane.acceleration + glm::vec3(glm::length(sim->plane.velocity)*sim->plane.rot_velocity.x, 0.0f, 0.0f);
+    std::sprintf(gforce, "%-7.2f %4s", (glm::length(r))/9.8, "G");
     render_text(gforce, 1, row_spacing(3), text_size, Colors::GGreen, TextPosition::TOPRIGHT);
 
     //display control surfaces' angles
@@ -367,9 +382,12 @@ void View::render_hud() {
     std::sprintf(rudder_angle  ,"        % 3.2f        ", sim->plane.rudder.pitch * RAD_TO_DEG);
 
     text_size = 13.125;
-    render_text(aileron_angle , 1, row_spacing(-1), text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
-    render_text(elevator_angle, 1, row_spacing(0), text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
-    render_text(rudder_angle  , 1,              -1, text_size, Colors::GGreen, TextPosition::BOTTOMRIGHT);
+    auto& ael_col = sim->plane.rwing.stalled || sim->plane.lwing.stalled ? Colors::Pred : Colors::GGreen;
+    auto& ele_col = sim->plane.elevator.stalled ? Colors::Pred : Colors::GGreen;
+    auto& rud_col = sim->plane.rudder.stalled ? Colors::Pred : Colors::GGreen;
+    render_text(aileron_angle , 1, row_spacing(-1), text_size, ael_col, TextPosition::BOTTOMRIGHT);
+    render_text(elevator_angle, 1, row_spacing(0), text_size, ele_col, TextPosition::BOTTOMRIGHT);
+    render_text(rudder_angle  , 1,              -1, text_size, rud_col, TextPosition::BOTTOMRIGHT);
 
 }
 

@@ -41,6 +41,7 @@ public:
 	glm::mat4 projection;
     glm::mat4 rotation;
     glm::vec2 rotation_amount = {0, 0};
+    bool locked = true;
 
 	bool move_forward;
 	bool move_back;
@@ -52,6 +53,7 @@ public:
 	glm::vec3 direction;
 //private:
 	glm::vec3 up;
+    glm::vec3 plane_up = glm::vec3(0.0f, 1.0f, 0.0f);
 
     Aircraft* target = nullptr;
 

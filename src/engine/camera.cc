@@ -56,10 +56,22 @@ void Camera::Update() {
 
     projection = glm::perspective(fov, aspect_ratio, 0.1f, 1000.0f);
     if(target != nullptr) {
-        glm::vec3 plane_up = target->rotm * glm::vec4(up, 0.0f);
-        glm::vec3 eye = target->position + glm::vec3(target->rotm * glm::vec4(position, 0.0f));
-        glm::vec3 center = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-        view = glm::lookAt(eye, center, plane_up);
+
+        glm::vec3 camera_up;
+        glm::vec3 eye;
+        glm::vec3 center;
+        if(locked) {
+            camera_up = plane_up;
+            eye = target->position + glm::vec3(target->rotm * glm::vec4(position, 0.0f));
+            center = target->position;// + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, -13.0f, 0.0f));
+        } else {
+            camera_up = up;
+            eye = target->position + glm::vec3(target->rotm * glm::vec4(position, 0.0f));
+            center = target->position;// + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, -13.0f, 0.0f));
+        }
+
+        plane_up = target->rotm * glm::vec4(up, 0.0f);
+        view = glm::lookAt(eye, center, camera_up);
     } else {
         view = glm::lookAt(position, position + direction, up);
     }

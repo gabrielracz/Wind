@@ -7,12 +7,13 @@
 #include <cmath>
 #include <numeric>
 #include <paths.h>
+#include <glm/common.hpp>
 
 const size_t N = 128;
 const glm::vec4 Simulation::gravity = {0.0f, -9.8f, 0.0f, 0.0f};
 int Simulation::init() {
     gen_terrain();
-    plane = Aircraft(glm::vec3(0.0f, 130.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
+    plane = Aircraft(glm::vec3(0.0f, 160.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
     // plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
     plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, -85.0f, 0.0f);
 	return 0;
@@ -71,6 +72,7 @@ void Simulation::gen_terrain() {
 
             /*                    subsample rate (lower is smoother)     amplitude*/
             const auto ridge = [](float p, float height){
+                // return glm::clamp<float>(abs(p)*-1, 1000000, -0.01f) + height;
                 return abs(p)*-1 + height;
             };
             float perlin_samples[] = {

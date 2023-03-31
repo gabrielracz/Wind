@@ -41,7 +41,7 @@ vec4 quantizeGrayscale(vec3 color, int numSteps) {
     // Convert color to grayscale using the formula Y = 0.2126*R + 0.7152*G + 0.0722*B
     float gray = dot(color, vec3(0.2126, 0.7152, 0.0722));
     // Quantize the grayscale value to the nearest multiple of (1.0 / numSteps)
-    float quantized = round(gray * numSteps) / numSteps;
+    float quantized = round(gray * numSteps) / numSteps  - 0.3;
 
     // Convert the quantized grayscale value back to RGB
     return vec4(quantized, quantized, quantized, 1.0f);
@@ -65,6 +65,6 @@ void main(){
 
     // vec4 quantized = quantizeGrayscale(result, 17);
     gl_FragColor = dither(vec4(result, 1.0f));
-    // gl_FragColor = vec4(result, 1.0f);
+    // gl_FragColor = quantized;
 
 }

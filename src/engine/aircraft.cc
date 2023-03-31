@@ -31,9 +31,10 @@ void Wing::update_rotation() {
 float Wing::coefficient_lift(float aoa) {
     float max_cl = 1.2;
     if(aoa <= stall_angle && aoa >= -stall_angle) {
+        stalled = false;
         return (max_cl / stall_angle) * aoa; //linear lift
     } else {
-        // std::cout << "STALL" << std::endl;
+        stalled = true;
         return sin(2*aoa);
     }
 }
@@ -99,8 +100,8 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.15),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.15), //neg dihedral
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.1),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.1), //neg dihedral
 	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.00025f, 0.0f, 0.0f),
 	rudder(glm::vec3(0.0f, 0.0f, 4.5f), -1.5f, 1.0f, 0.0f, M_PI_2)
 {
@@ -109,11 +110,12 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
 
 void Aircraft::update(float dt) {
     if(dt == 0.0f) {return;}
+    elapsed += dt;
 
     rot_acceleration = glm::vec3(0.0f);
     acceleration =  glm::vec3(0.0f);
 
-    glm::vec3 air = -velocity;
+    glm::vec3 air = -velocity; // add wind here
     lwing.solve(air);
     rwing.solve(air);
     elevator.solve(air);
@@ -126,6 +128,7 @@ void Aircraft::update(float dt) {
     translational_force += rudder.net_force;
     if(throttle)
         translational_force += thrust;
+
     if(velocity != glm::vec3(0.0f)){
         glm::vec3 vdir = glm::normalize(velocity);
         float vmag = glm::length(velocity);

@@ -14,25 +14,26 @@ enum class Pitch {
 };
 
 typedef struct Wing {
-    glm::vec3 pos;
-    float span;
-    float chord;
-    float pitch;
-    float resting_pitch;
-    float area;
-    float lift_distribution;
-    float dihedral;
+    glm::vec3 pos = glm::vec3(0.0f);
+    float span = 0.0f;
+    float chord = 0.0f;
+    float pitch = 0.0f;
+    float resting_pitch = 0.0f;
+    float area = 0.0f;
+    float lift_distribution = 0.0f;
+    float dihedral = 0.0f;
     float stall_angle = 16.0f * M_PI/180.0f;
-    float angle_of_attack;
-    float flow_velocity;
+    float angle_of_attack = 0.0f;
+    float flow_velocity = 0.0f;
+    bool stalled = false;
 
-    glm::vec3 lift;
-    glm::vec3 drag;
+    glm::vec3 lift = glm::vec3(0.0f);
+    glm::vec3 drag = glm::vec3(0.0f);
     glm::vec3 net_force = glm::vec3(0.0f);
-    glm::vec3 facing;
-    glm::vec3 rel;
+    glm::vec3 facing = glm::vec3(0.0);
+    glm::vec3 rel = glm::vec3(0.0);
     glm::mat4 rotm = glm::mat4(1.0f);
-    glm::vec3 center_of_pressure;
+    glm::vec3 center_of_pressure = glm::vec3(0.0);
 
     Wing() = default;
     Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.5f);
@@ -51,6 +52,7 @@ typedef struct Wing {
 class Aircraft {
 public:
 
+    float elapsed = 0.0f;
     //translational
     glm::vec3 position;
     glm::vec3 velocity = glm::vec3(0.0f);
@@ -92,7 +94,7 @@ public:
     //            0.0f,     0.0,    948.0f
     // ) * LBS_TO_KG;
 
-    bool throttle;
+    bool throttle = false;
 
 
     Wing rwing;
