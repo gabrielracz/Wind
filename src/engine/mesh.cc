@@ -32,6 +32,10 @@ Mesh::Mesh(const std::string& obj_file_path)
     std::vector<std::array<float, 3>> normals;
 
     std::ifstream obj_file (obj_file_path);
+	if (obj_file.fail()) {
+		std::cout << "Couldn't open object file " << obj_file_path << std::endl;
+		return;
+	}
     std::string line;
     unsigned int f_count = 0;
     while(std::getline(obj_file, line)) {

@@ -2,7 +2,10 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+//#include <math.h>
+#include <cmath>
 #include "defs.h"
 
 #define LBS_TO_KG 0.453592f

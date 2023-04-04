@@ -1,2 +1,2 @@
-#define RESOURCES_DIRECTORY "/home/gabe/Projects/Artemis/Wind/resources"
-#define SHADER_DIRECTORY "/home/gabe/Projects/Artemis/Wind/src/shaders"
+#define RESOURCES_DIRECTORY "C:/Users/Gabi/ZZ/wind/resources"
+#define SHADER_DIRECTORY "C:/Users/Gabi/ZZ/wind/src/shaders"

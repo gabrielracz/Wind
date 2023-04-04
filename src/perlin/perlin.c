@@ -3,7 +3,7 @@
 #include<string.h>
 #include<time.h>
 #include<math.h>
-#include<unistd.h>
+//#include<unistd.h>
 #include<memory.h>
 #include "perlin.h"
 

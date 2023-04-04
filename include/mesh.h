@@ -1,5 +1,6 @@
 #ifndef MESH_H
 #define MESH_H
+#define GLM_FORCE_RADIANS
 #include<glm/glm.hpp>
 #include <initializer_list>
 #include<string>

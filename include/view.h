@@ -1,9 +1,11 @@
 #ifndef VIEW_H
 #define VIEW_H
 
+#define GLM_FORCE_RADIANS
+
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>	//vector print
 #include <glm/gtc/matrix_transform.hpp>
@@ -154,7 +156,7 @@ public:
     void render_terrain(const glm::vec4& color);
     void render_hud();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position = TextPosition::TOPLEFT);
-    void render_line(const glm::vec3& line, const glm::vec3& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
+    void render_line(const glm::vec3& line, const glm::vec4& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);
 
     static bool DRAW_WIREFRAME;

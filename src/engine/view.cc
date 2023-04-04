@@ -5,9 +5,10 @@
 #include "shapes.h"
 #include "simulation.h"
 #include <GLFW/glfw3.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 #include <paths.h>
 
+#define GLM_FORCE_RADIANS
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -68,7 +69,7 @@ int View::init(Application* parent, Simulation* model)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-	//  glfwSwapInterval(0);
+	  //glfwSwapInterval(0);
 
 	//  Shaders
     #define DEFAULT
@@ -113,7 +114,7 @@ int View::init(Application* parent, Simulation* model)
                         {}, 0,
                         &(textures[T_CRATE]), 1,
                         layout);
-    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider3.obj");
+    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
 
 	glm::vec3 camera_position(0.0f, 4.0f, 17.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
@@ -287,7 +288,7 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
         render_wing_forces(aircraft.rwing, transform*reverse_z, rotation);
         render_wing_forces(aircraft.elevator, transform, rotation);
         render_wing_forces(aircraft.rudder, transform, rotation);
-        render_line(rotation * glm::vec4(aircraft.velocity, 1.0f), Colors::Cyan, 1.0f, aircraft.position);
+        render_line(glm::vec3(rotation * glm::vec4(aircraft.velocity, 1.0f)), Colors::Cyan, 1.0f, aircraft.position);
         // if(aircraft.throttle)
         //     render_line(rotation * glm::vec4(aircraft.thrust, 1.0f), Colors::Green, 1.0f, aircraft.position);
     }
@@ -311,7 +312,7 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
 
     shd.use();
     shd.SetUniform4f(color, "base_color");
-    shd.SetUniform3f(Colors::White, "light_color");
+    shd.SetUniform3f(glm::vec3(Colors::White), "light_color");
     shd.SetUniform3f(light_pos, "light_pos");
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
@@ -342,13 +343,13 @@ void View::render_terrain(const glm::vec4& color) {
 
     shd.use();
     shd.SetUniform4f(color, "base_color");
-    shd.SetUniform3f(Colors::White, "light_color");
+    shd.SetUniform3f(glm::vec3(Colors::White), "light_color");
     shd.SetUniform3f(light_pos, "light_pos");
     shd.SetUniform4m(transform, "model");
     shd.SetUniform4m(camera.projection, "projection");
     shd.SetUniform4m(camera.view, "view");
 
-    const glm::mat4 dither_kernel2 =
+    const glm::mat2 dither_kernel2 =
         glm::mat2(
             0, 2,
             3, 1
@@ -371,14 +372,14 @@ void View::render_terrain(const glm::vec4& color) {
 
 void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation) {
     // rotate the wing forces by 180 to be relative to +z direction (-z by default)
-    glm::vec3 rwing_pos = transform * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f);
-    glm::vec3 lift = rotation * wing.rotm * glm::vec4(wing.lift, 1.0f);
+    glm::vec3 rwing_pos = glm::vec3(transform * glm::vec4(wing.pos + wing.center_of_pressure, 1.0f));
+    glm::vec3 lift = glm::vec3(rotation * wing.rotm * glm::vec4(wing.lift, 1.0f));
     render_line(lift, Colors::Green, 0.001f, rwing_pos);
 
-    glm::vec3 drag = rotation * wing.rotm * glm::vec4(wing.drag, 1.0f);
+    glm::vec3 drag = glm::vec3(rotation * wing.rotm * glm::vec4(wing.drag, 1.0f));
     render_line(drag, Colors::Pred, 0.001f, rwing_pos);
 
-    glm::vec3 net = rotation * glm::vec4(wing.net_force, 1.0f);
+    glm::vec3 net = glm::vec3(rotation * glm::vec4(wing.net_force, 1.0f));
     render_line(net, Colors::Magenta, 0.001f, rwing_pos);
 }
 
@@ -525,7 +526,7 @@ void View::render_text(const std::string& text, float x, float y, float size, co
     glDisable(GL_BLEND);
 }
 
-void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scale, const glm::vec3& shift) {
+void View::render_line(const glm::vec3 &line, const glm::vec4 &color, float scale, const glm::vec3& shift) {
     glBindVertexArray(line_vao.VAO);
     glBindBuffer(GL_ARRAY_BUFFER, line_vao.VBO);
 
@@ -543,7 +544,7 @@ void View::render_line(const glm::vec3 &line, const glm::vec3 &color, float scal
     transform = glm::translate(transform, shift);
     transform = glm::scale(transform, glm::vec3(scale));
 
-    shader.SetUniform4f(glm::vec4(color, 1.0f), "line_color");
+    shader.SetUniform4f(color, "line_color");
     shader.SetUniform4m(transform, "model");
     shader.SetUniform4m(camera.view, "view");
     shader.SetUniform4m(camera.projection, "projection");

@@ -53,7 +53,7 @@ void FreeCamera::Update() {
 
     projection = glm::perspective(fov, aspect_ratio, 0.1f, 1000.0f);
     if(target != nullptr) {
-        glm::vec3 up = target->rotm * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+        glm::vec3 up = glm::vec3(target->rotm * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
         glm::vec3 eye = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 4.0f, 17.0f, 0.0f));
         glm::vec3 center = target->position + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
         view = glm::lookAt(eye, center, up);

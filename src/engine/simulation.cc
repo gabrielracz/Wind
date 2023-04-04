@@ -15,7 +15,7 @@ int Simulation::init() {
     gen_terrain();
     plane = Aircraft(glm::vec3(0.0f, 160.0f, 3.0f), glm::vec3(glm::radians(0.0f), glm::radians(0.0f), glm::radians(0.0f)), GLIDER);
     // plane.rotm = glm::rotate(plane.rotm, glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
-    plane.velocity = glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, -85.0f, 0.0f);
+    plane.velocity = glm::vec3(glm::inverse(plane.rotm) * glm::vec4(0.0f, 0.0f, -85.0f, 0.0f));
 	return 0;
 }
 
@@ -25,8 +25,8 @@ int Simulation::update(double dt) {
 
     glm::vec4 gravity(0.0f, -9.8f, 0.0f, 0.0f);
     glm::vec4 thrust(0.0f, 0.0f, -2500.0f, 0.0f);
-    plane.acceleration = glm::inverse(plane.rotm) * gravity;
-    plane.thrust = thrust;
+    plane.acceleration = glm::vec3(glm::inverse(plane.rotm) * gravity);
+    plane.thrust = glm::vec3(thrust);
 
     plane.update(dt);
 	return 0;

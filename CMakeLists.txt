@@ -6,7 +6,7 @@ project(${PROJ_NAME})
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(COMPILER_FLAGS "-g")
+SET(COMPILER_FLAGS "")
 
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
@@ -59,7 +59,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 target_link_libraries(${PROJ_NAME} ${OPENGL_gl_LIBRARY})
 
 # Other libraries needed
-set(LIBRARY_PATH "" CACHE PATH "Folder with GLEW, GLFW, GLM, and SOIL libraries")
+set(LIBRARY_PATH "C:/Users/Gabi/Desktop/Libraries" CACHE PATH "Folder with GLEW, GLFW, GLM, and SOIL libraries")
 include_directories(${LIBRARY_PATH}/include)
 if(NOT WIN32)
     find_library(GLEW_LIBRARY GLEW)

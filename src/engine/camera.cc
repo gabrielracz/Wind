@@ -21,7 +21,8 @@ Camera::Camera(const glm::vec3& pos, const glm::vec3& front, const glm::vec3& u)
 
 	window_width = 800;
 	window_height = 450;
-	fov = glm::radians<float>(75);
+	//fov = glm::radians<float>(75);
+    fov = 1.30899;
 	aspect_ratio = (float)window_width / (float)window_height;
 
 
@@ -70,7 +71,7 @@ void Camera::Update() {
             center = target->position;// + glm::vec3(target->rotm * glm::vec4(0.0f, 0.0f, -13.0f, 0.0f));
         }
 
-        plane_up = target->rotm * glm::vec4(up, 0.0f);
+        plane_up = glm::vec3(target->rotm * glm::vec4(up, 0.0f));
         view = glm::lookAt(eye, center, camera_up);
     } else {
         view = glm::lookAt(position, position + direction, up);
@@ -105,8 +106,8 @@ void Camera::Rotate(MoveDirection d) {
     }
     rotation = glm::rotate(glm::mat4(1.0f), rotation_amount.x, glm::vec3(1.0f, 0.0f, 0.0f));
     rotation *= glm::rotate(glm::mat4(1.0f), rotation_amount.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    position = rotation * glm::vec4(original_position, 1.0f);
-    up = rotation * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    position = glm::vec3(rotation * glm::vec4(original_position, 1.0f));
+    up = glm::vec3(rotation * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Update();
 }
 
@@ -125,11 +126,11 @@ void Camera::StepPitch(float p) {
 
 void Camera::StepFov(float f) {
 	fov += f*zoom_sensitivity;
-	if (fov < PI/180.0f) {
-		fov = PI/180.0f;
-	}if (fov > PI/2.0f) {
-		fov = PI/2.0f;
-	}
+	//if (fov < PI/180.0f) {
+	//	fov = PI/180.0f;
+	//}if (fov > PI/2.0f) {
+	//	fov = PI/2.0f;
+	//}
 	projection = glm::perspective(fov, aspect_ratio, 0.1f, 100.0f);
 }
 

@@ -1,8 +1,10 @@
 #ifndef FREECAM_H
 #define FREECAM_H
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#define GLEW_STATIC
 #include <GL/glew.h>
 
 #define PI 3.141596

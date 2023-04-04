@@ -19,7 +19,7 @@ Wing::Wing(const glm::vec3 &pos, float span, float chord, float pitch, float dih
     update_rotation();
     //  lift distribution = point along span where lift is applied (averaged).
     //  lift is usually distributed at one quarter chord length from the leading edge.
-    center_of_pressure = rotm * glm::vec4(span*lift_distribution, 0.0f, chord*0.25, 1.0f);
+    center_of_pressure = glm::vec3(rotm * glm::vec4(span*lift_distribution, 0.0f, chord*0.25, 1.0f));
 }
 
 void Wing::update_rotation() {
@@ -47,11 +47,11 @@ void Wing::solve_aoa(const glm::vec3& forward_air, const glm::vec3& rvelocity) {
     glm::vec3 air = forward_air;// - glm::cross(rvelocity, pos + center_of_pressure);
     // std::cout << glm::to_string(glm::cross(rvelocity, pos + center_of_pressure)) << glm::to_string(rvelocity) << std::endl;
     glm::mat4 plane_to_wing = glm::inverse(rotm);
-    glm::vec3 relwind = plane_to_wing * glm::vec4(air, 1.0f);
+    glm::vec3 relwind = glm::vec3(plane_to_wing * glm::vec4(air, 1.0f));
     glm::vec3 relwind_yz = glm::vec3(0.0f, relwind.y, relwind.z);
     flow_velocity = glm::length(relwind_yz);
     rel = relwind;
-    glm::vec3 wing_chord = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    glm::vec3 wing_chord = glm::vec3(0.0f, 0.0f, 1.0f);
     angle_of_attack = atan2(glm::dot(glm::cross(wing_chord, relwind_yz), glm::vec3(1.0f, 0.0f, 0.0f)),
                                      glm::dot(wing_chord, relwind_yz));
 }
@@ -74,8 +74,8 @@ glm::vec3 Wing::solve(const glm::vec3& air, const glm::vec3& rvelocity) {
     solve_aoa(air, rvelocity);
     lift = solve_lift();
     drag = solve_drag();
-    net_force = rotm * glm::vec4(lift + drag, 1.0f);
-    return rotm * glm::vec4(net_force, 1.0f);
+    net_force = glm::vec3(rotm * glm::vec4(lift + drag, 1.0f));
+    return glm::vec3(rotm * glm::vec4(net_force, 1.0f));
     // return net_force;
 }
 
@@ -145,7 +145,7 @@ void Aircraft::update(float dt) {
     acceleration += glm::vec3(glm::inverse(rotm) * Simulation::gravity);
 
     velocity += acceleration * dt;
-    glm::vec3 world_velocity = rotm * glm::vec4(velocity, 1.0f);
+    glm::vec3 world_velocity(rotm * glm::vec4(velocity, 1.0f));
     position += glm::vec3(world_velocity.x, world_velocity.y, world_velocity.z) * dt / 4.0f;
 
     glm::vec3 torque;
