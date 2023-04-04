@@ -43,21 +43,23 @@ float Wing::coefficient_drag(float aoa) {
     return 1 - cos(2*aoa);
 }
 
-void Wing::solve_aoa(const glm::vec3& air) {
+void Wing::solve_aoa(const glm::vec3& forward_air, const glm::vec3& rvelocity) {
+    glm::vec3 air = forward_air;// - glm::cross(rvelocity, pos + center_of_pressure);
+    // std::cout << glm::to_string(glm::cross(rvelocity, pos + center_of_pressure)) << glm::to_string(rvelocity) << std::endl;
     glm::mat4 plane_to_wing = glm::inverse(rotm);
     glm::vec3 relwind = plane_to_wing * glm::vec4(air, 1.0f);
-    glm::vec3 relwind_yz(0.0f, relwind.y, relwind.z);
+    glm::vec3 relwind_yz = glm::vec3(0.0f, relwind.y, relwind.z);
     flow_velocity = glm::length(relwind_yz);
     rel = relwind;
     glm::vec3 wing_chord = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    angle_of_attack = atan2(glm::dot(glm::cross(wing_chord, relwind_yz), glm::vec3(-1.0f, 0.0f, 0.0f)),
+    angle_of_attack = atan2(glm::dot(glm::cross(wing_chord, relwind_yz), glm::vec3(1.0f, 0.0f, 0.0f)),
                                      glm::dot(wing_chord, relwind_yz));
 }
 
 glm::vec3 Wing::solve_lift() {
     float cl = coefficient_lift(angle_of_attack);
     float lift = cl * (AIR_DENSITY * flow_velocity*flow_velocity)/2 * area;
-    glm::vec3 lift_vector = glm::normalize(glm::cross(glm::vec3(-1.0f, 0.0f, 0.0f), rel)) * lift;
+    glm::vec3 lift_vector = glm::normalize(glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), rel)) * lift;
     return lift_vector;
 }
 
@@ -68,8 +70,8 @@ glm::vec3 Wing::solve_drag() {
     return drag_vector;
 }
 
-glm::vec3 Wing::solve(const glm::vec3& air) {
-    solve_aoa(air);
+glm::vec3 Wing::solve(const glm::vec3& air, const glm::vec3& rvelocity) {
+    solve_aoa(air, rvelocity);
     lift = solve_lift();
     drag = solve_drag();
     net_force = rotm * glm::vec4(lift + drag, 1.0f);
@@ -100,8 +102,8 @@ Aircraft::Aircraft(const glm::vec3 &_position, const glm::vec3 &_rotation, Entit
     : position(_position),
     rotation(_rotation),
     id(_id),
-    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.1),
-    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.1), //neg dihedral
+    rwing(glm::vec3(0.0f, 0.0f, 0.4f), 7, 1, 0.0, 0.05),
+    lwing(glm::vec3(0.0f, 0.0f, 0.4f), -7, 1, 0.0, -0.05), //neg dihedral
 	elevator(glm::vec3(0.0f, 0.0f, 4.5f), 3, 1.0f, 0.00025f, 0.0f, 0.0f),
 	rudder(glm::vec3(0.0f, 0.0f, 4.5f), -1.5f, 1.0f, 0.0f, M_PI_2)
 {
@@ -116,10 +118,10 @@ void Aircraft::update(float dt) {
     acceleration =  glm::vec3(0.0f);
 
     glm::vec3 air = -velocity; // add wind here
-    lwing.solve(air);
-    rwing.solve(air);
-    elevator.solve(air);
-    rudder.solve(air);
+    lwing.solve(air, rot_velocity);
+    rwing.solve(air, rot_velocity);
+    elevator.solve(air, rot_velocity);
+    rudder.solve(air, rot_velocity);
 
     glm::vec3 translational_force(0.0f);
     translational_force += rwing.net_force;
@@ -152,11 +154,21 @@ void Aircraft::update(float dt) {
     torque += glm::cross(elevator.pos, elevator.net_force);
     torque += glm::cross(rudder.pos, rudder.net_force);
 
+    // if(rot_velocity != glm::vec3(0.0f)) {
+    //     glm::vec3 rot_air = glm::cross(rot_velocity, rwing.pos + rwing.center_of_pressure);
+    //     float rmag = glm::length(rot_air);
+    //     glm::vec3 rot_air_resistance = glm::normalize(rot_air) * rmag*rmag * 0.5f;
+    //     torque += glm::cross(rwing.pos + rwing.center_of_pressure, rot_air_resistance);
+    //     torque += glm::cross(lwing.pos + lwing.center_of_pressure, rot_air_resistance);
+    // }
+
     rot_acceleration = glm::inverse(inertia*inertia) * torque;
 
     //integrate velocity
     rot_velocity += glm::vec3(rot_acceleration.x, rot_acceleration.y, -rot_acceleration.z) * dt;
+    float rmag = glm::length(rot_velocity);
     rot_velocity *= 1.0f - dt*1.1; //some damping
+
 
     float theta = glm::length(rot_velocity) * dt;
     if(theta > 0.0f) {

@@ -41,7 +41,7 @@ public:
 	glm::mat4 projection;
     glm::mat4 rotation;
     glm::vec2 rotation_amount = {0, 0};
-    bool locked = true;
+    bool locked = false;
 
 	bool move_forward;
 	bool move_back;

@@ -71,12 +71,16 @@ int View::init(Application* parent, Simulation* model)
 	//  glfwSwapInterval(0);
 
 	//  Shaders
+    #define DEFAULT
 	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
-	shaders[S_DITHER]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
+	shaders[S_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
 	shaders[S_DITHER2]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither2.glsl");
+	shaders[S_TOON]      = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_toon.glsl");
 	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
     shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
-    shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox.glsl");
+    shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_default.glsl");
+    shaders[S_SKYBOX_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_dither.glsl");
+    shaders[S_SKYBOX_TOON]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_toon.glsl");
 
 
     textures[T_CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
@@ -109,7 +113,7 @@ int View::init(Application* parent, Simulation* model)
                         {}, 0,
                         &(textures[T_CRATE]), 1,
                         layout);
-    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider2.obj");
+    meshes[GLIDER] = Mesh(RESOURCES_DIRECTORY"/glider3.obj");
 
 	glm::vec3 camera_position(0.0f, 4.0f, 17.0f);
 	glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
@@ -134,8 +138,11 @@ int View::init_controls() {
 	key_controls.insert({GLFW_KEY_L, false});
 	key_controls.insert({GLFW_KEY_J, false});
 	key_controls.insert({GLFW_KEY_0, false});
-	key_controls.insert({GLFW_KEY_U, false});
-	key_controls.insert({GLFW_KEY_O, false});
+
+    key_controls.insert({GLFW_KEY_1, false});
+    key_controls.insert({GLFW_KEY_2, false});
+    key_controls.insert({GLFW_KEY_3, false});
+
     key_controls.insert({GLFW_KEY_SPACE, false});
     key_controls.insert({GLFW_KEY_LEFT_SHIFT, false});
     key_controls.insert({GLFW_KEY_R, false});
@@ -199,6 +206,17 @@ int View::check_controls() {
         camera.Rotate(MoveDirection::RESET);
     }
 
+	if(key_controls[GLFW_KEY_1]) {
+        active_shading_mode = ShadingMode::SMOOTHE;
+        key_controls[GLFW_KEY_1] = false;
+	} else if(key_controls[GLFW_KEY_2]) {
+        active_shading_mode = ShadingMode::DITHERED;
+        key_controls[GLFW_KEY_2] = false;
+	} else if(key_controls[GLFW_KEY_3]) {
+        active_shading_mode = ShadingMode::TOON;
+        key_controls[GLFW_KEY_3] = false;
+	}
+
 	if(key_controls[GLFW_KEY_ESCAPE]) {
         sim->paused = !sim->paused;
         key_controls[GLFW_KEY_ESCAPE] = false;
@@ -217,15 +235,16 @@ int View::check_controls() {
     }
 
     sim->plane.throttle = !key_controls[GLFW_KEY_LEFT_SHIFT];
-	// camera.move_forward = key_controls[GLFW_KEY_W];
-    // camera.move_back = key_controls[GLFW_KEY_S];
-    // camera.move_left = key_controls[GLFW_KEY_A];
-    // camera.move_right = key_controls[GLFW_KEY_D];
+
 	if(key_controls[GLFW_KEY_RIGHT_BRACKET]) {
 		View::DRAW_DEBUG = !View::DRAW_DEBUG;
 		// View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
 		key_controls[GLFW_KEY_RIGHT_BRACKET] = false;
+	}
 
+	if(key_controls[GLFW_KEY_LEFT_BRACKET]) {
+		View::DRAW_WIREFRAME = !View::DRAW_WIREFRAME;
+		key_controls[GLFW_KEY_LEFT_BRACKET] = false;
 	}
 	return 0;
 }
@@ -273,7 +292,23 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
         //     render_line(rotation * glm::vec4(aircraft.thrust, 1.0f), Colors::Green, 1.0f, aircraft.position);
     }
 
-    Shader& shd = shaders[S_DITHER];
+
+    Shader shd;
+    switch(active_shading_mode) {
+        case ShadingMode::SMOOTHE:
+            shd = shaders[S_DEFAULT];
+            break;
+        case ShadingMode::DITHERED:
+            shd = shaders[S_DITHER];
+            break;
+        case ShadingMode::TOON:
+            shd = shaders[S_TOON];
+            break;
+        default:
+            shd = shaders[S_DEFAULT];
+            break;
+    }
+
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
@@ -288,7 +323,23 @@ void View::render_aircraft(Aircraft& aircraft, const glm::vec4& color)
 
 void View::render_terrain(const glm::vec4& color) {
     glm::mat4 transform(1.0f);
-    Shader& shd = shaders[S_DITHER2];
+
+    Shader shd;
+    switch(active_shading_mode) {
+        case ShadingMode::SMOOTHE:
+            shd = shaders[S_DEFAULT];
+            break;
+        case ShadingMode::DITHERED:
+            shd = shaders[S_DITHER2];
+            break;
+        case ShadingMode::TOON:
+            shd = shaders[S_TOON];
+            break;
+        default:
+            shd = shaders[S_DEFAULT];
+            break;
+    }
+
     shd.use();
     shd.SetUniform4f(color, "base_color");
     shd.SetUniform3f(Colors::White, "light_color");
@@ -333,7 +384,23 @@ void View::render_wing_forces(Wing wing, glm::mat4 transform, glm::mat4 rotation
 
 void View::render_skybox() {
     glDepthMask(false);
-    Shader& shd = shaders[S_SKYBOX];
+
+    Shader shd;
+    switch(active_shading_mode) {
+        case ShadingMode::SMOOTHE:
+            shd = shaders[S_SKYBOX];
+            break;
+        case ShadingMode::DITHERED:
+            shd = shaders[S_SKYBOX_DITHER];
+            break;
+        case ShadingMode::TOON:
+            shd = shaders[S_SKYBOX_TOON];
+            break;
+        default:
+            shd = shaders[S_SKYBOX];
+            break;
+    }
+
     shd.use();
     shd.SetUniform4m(glm::scale(glm::vec3(300.0f)), "transformation");
     shd.SetUniform4m(camera.view, "view");

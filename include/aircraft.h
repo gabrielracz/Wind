@@ -39,10 +39,10 @@ typedef struct Wing {
     Wing(const glm::vec3& pos, float span, float chord, float pitch, float dihedral, float ld = 0.5f);
     float coefficient_lift(float aoa);
     float coefficient_drag(float aoa);
-    void solve_aoa(const glm::vec3& relwind);
+    void solve_aoa(const glm::vec3& relwind, const glm::vec3& rvelocity);
     glm::vec3 solve_lift();
     glm::vec3 solve_drag();
-    glm::vec3 solve(const glm::vec3& air);
+    glm::vec3 solve(const glm::vec3& air, const glm::vec3& rvelocity);
     void update_rotation();
     void change_pitch(Pitch p);
 
@@ -57,6 +57,7 @@ public:
     glm::vec3 position;
     glm::vec3 velocity = glm::vec3(0.0f);
     glm::vec3 acceleration = glm::vec3(0.0f);
+
     glm::vec3 thrust = glm::vec3(0.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 front = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -85,7 +86,7 @@ public:
     glm::mat3 inertia = glm::mat3(
              546.0f,   0.0f,   0.0f,
                0.0f, 967.0f,   0.0f,
-               0.0f,     0.0,    948.0f
+               0.0f,     0.0,    848.0f
     ) * LBS_TO_KG;
     //C172
     // glm::mat3 inertia = glm::mat3(

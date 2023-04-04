@@ -82,13 +82,23 @@ class View {
 		S_DEFAULT,
         S_DITHER,
         S_DITHER2,
+        S_TOON,
 		S_GRID,
 		S_LIGHT,
 		S_TEXT,
         S_LINE,
         S_SKYBOX,
+        S_SKYBOX_DITHER,
+        S_SKYBOX_TOON,
         N_SHADERS
 	};
+
+    enum ShadingMode {
+        SMOOTHE,
+        DITHERED,
+        TOON,
+        N_MODES
+    };
 
 	enum Textures {
 		T_CHARMAP = 0,
@@ -129,6 +139,7 @@ public:
 	unsigned int skybox_vao;
     VertexArray line_vao;
     Mesh meshes[N_ENTITY_TYPES];
+    ShadingMode active_shading_mode = ShadingMode::TOON;
 
     float framedelta = 0.0f;
 

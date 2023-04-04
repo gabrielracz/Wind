@@ -73,7 +73,7 @@ void Simulation::gen_terrain() {
             /*                    subsample rate (lower is smoother)     amplitude*/
             const auto ridge = [](float p, float height){
                 // return glm::clamp<float>(abs(p)*-1, 1000000, -0.01f) + height;
-                return abs(p)*-1 + height;
+                return glm::clamp<float>(abs(p)*-1 + height+2, 0, height);
             };
             float perlin_samples[] = {
                 perlin((x + pscale)*0.005f, (z + pscale)*0.005f) * 100.0f,
