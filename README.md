@@ -5,14 +5,17 @@ Simulating the fundamental aerodynamic forces that act on an aircraft during fli
 <!-- ![a screenshot of the current state of the sim](resources/screenshots/skyfly.jpg) -->
 ![a gif of the current state of the sim](resources/screenshots/wind.gif)
 
-Build & Run:
+## Build & Run:
 
-1. Install libs (Cmake, GLEW, GLFW, GLM):
-
-		sudo apt install build-essential cmake libglfw3-dev libglew-dev libglm-dev
-2. Clone repository:
+### Debian-based:
+1. Clone repository:
     
 		git clone https://github.com/gabrielracz/Wind.git
+
+2. Install libs (Cmake, GLEW, GLFW, GLM): \
+
+		sudo apt install build-essential cmake libglfw3-dev libglew-dev libglm-dev
+
 3. Build and run:
 		
 		mkdir build
@@ -20,3 +23,23 @@ Build & Run:
 		cmake ..
 		make
 		./wind
+
+### Windows
+
+1. Clone repository:
+    
+		git clone https://github.com/gabrielracz/Wind.git
+
+2. Have [CMake](https://cmake.org/download/) and [Visual Studio](https://visualstudio.microsoft.com/downloads/) Installed
+
+3. Create solution:
+		
+		mkdir build
+		cd build
+		cmake ..
+
+4. Open ```wind.sln``` and build Release x64
+
+5. Run
+
+        ./Release/wind.exe
