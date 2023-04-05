@@ -7,12 +7,12 @@ Simulating the fundamental aerodynamic forces that act on an aircraft during fli
 
 ## Build & Run:
 
-### Debian-based:
+### Linux:
 1. Clone repository:
     
 		git clone https://github.com/gabrielracz/Wind.git
 
-2. Install libs (Cmake, GLEW, GLFW, GLM): \
+2. Install dependencies (cmake, glew, glfw, glm):
 
 		sudo apt install build-essential cmake libglfw3-dev libglew-dev libglm-dev
 
