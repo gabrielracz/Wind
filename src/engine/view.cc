@@ -73,16 +73,7 @@ int View::init(Application* parent, Simulation* model)
 
 	//  Shaders
     #define DEFAULT
-	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
-	shaders[S_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
-	shaders[S_DITHER2]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither2.glsl");
-	shaders[S_TOON]      = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_toon.glsl");
-	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
-    shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
-    shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_default.glsl");
-    shaders[S_SKYBOX_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_dither.glsl");
-    shaders[S_SKYBOX_TOON]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_toon.glsl");
-
+    load_shaders();
 
     textures[T_CRATE]   = load_texture(RESOURCES_DIRECTORY"/crate_large.jpg");
 	textures[T_CHARMAP] = load_texture(RESOURCES_DIRECTORY"/fixedsys_alpha.png");
@@ -133,6 +124,19 @@ int View::init(Application* parent, Simulation* model)
 	return 0;
 }
 
+void View::load_shaders() {
+	shaders[S_DEFAULT]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_default.glsl");
+	shaders[S_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither.glsl");
+	shaders[S_DITHER2]   = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_dither2.glsl");
+	shaders[S_TOON]      = Shader(SHADER_DIRECTORY"/vertex_default.glsl",  SHADER_DIRECTORY"/fragment_toon.glsl");
+	shaders[S_TEXT]      = Shader(SHADER_DIRECTORY"/vertex_text.glsl",     SHADER_DIRECTORY"/fragment_text.glsl");
+    shaders[S_LINE]      = Shader(SHADER_DIRECTORY"/vertex_line.glsl",     SHADER_DIRECTORY"/fragment_line.glsl");
+    shaders[S_SKYBOX]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_default.glsl");
+    shaders[S_SKYBOX_DITHER]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_dither.glsl");
+    shaders[S_SKYBOX_TOON]    = Shader(SHADER_DIRECTORY"/vertex_skybox.glsl",   SHADER_DIRECTORY"/fragment_skybox_toon.glsl");
+    std::cout << "shaders loaded" << std::endl;
+}
+
 int View::init_controls() {
     key_controls.insert({GLFW_KEY_I, false});
 	key_controls.insert({GLFW_KEY_K, false});
@@ -157,6 +161,7 @@ int View::init_controls() {
 
 
 	key_controls.insert({GLFW_KEY_RIGHT_BRACKET, false});
+	key_controls.insert({GLFW_KEY_BACKSLASH, false});
 	key_controls.insert({GLFW_KEY_ESCAPE, false});
 	return 0;
 }
@@ -223,14 +228,17 @@ int View::check_controls() {
         key_controls[GLFW_KEY_ESCAPE] = false;
 		// glfwSetWindowShouldClose(win.ptr, true);
 	}
+	if(key_controls[GLFW_KEY_BACKSLASH]) {
+        load_shaders();
+        key_controls[GLFW_KEY_BACKSLASH] = false;
+	}
     if(key_controls[GLFW_KEY_SPACE]) {
         camera.locked = !camera.locked;
         // camera.up = camera.plane_up;
         key_controls[GLFW_KEY_SPACE] = false;
     }
     if(key_controls[GLFW_KEY_R]) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glfwSwapBuffers(win.ptr);
+        render_loading();
         sim->init();
         key_controls[GLFW_KEY_R] = false;
     }
@@ -259,7 +267,7 @@ int View::render(double dt)
 	if(glfwWindowShouldClose(win.ptr))
 		app->shutdown();
 
-    glm::vec4 clr = Colors::Grey;
+    glm::vec4 clr = Colors::DGrey;
 	glClearColor(clr.r, clr.g, clr.b, clr.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // camera.position = glm::vec3(0.0f, 4.0f, -15.0f) + sim->plane.position;
@@ -410,6 +418,14 @@ void View::render_skybox() {
     glBindTexture(GL_TEXTURE_CUBE_MAP, textures[T_SKYBOX].id);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(true);
+}
+
+void View::render_loading() {
+		glm::vec4 clr = Colors::DGrey;
+		glClearColor(clr.r, clr.g, clr.b, clr.a);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        render_text("Loading...", 0, 0, 30, Colors::Gasoline, TextPosition::CENTER);
+        glfwSwapBuffers(win.ptr);
 }
 
 void View::render_hud() {

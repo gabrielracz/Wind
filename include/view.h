@@ -37,7 +37,8 @@ class Simulation;
 namespace Colors {
     const glm::vec4 None        = {0.0f, 0.0f, 0.0f, 0.0f};
     const glm::vec4 Black       = {0.0f, 0.0f, 0.0f, 1.0f};
-    const glm::vec4 Grey        = {0.45f, 0.45f, 0.45f, 0.45f};
+    const glm::vec4 Grey        = {0.45f, 0.45f, 0.45f, 1.0f};
+    const glm::vec4 DGrey        = {0.20f, 0.20f, 0.20f, 1.0f};
     const glm::vec4 LGrey       = {0.7f, 0.7f, 0.7f, 1.0f};
     const glm::vec4 Cream       = {0xFF/255.0f, 0xD7/255.0f, 0xAF/255.0f, 1.0f};
     const glm::vec4 White       = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -148,6 +149,7 @@ public:
 	View(const std::string& win_title, int win_width, int win_height);
 	View();
 	int init(Application* app, Simulation* model);
+    void load_shaders();
     int init_controls();
     int check_controls();
 	int render(double dt);
@@ -155,6 +157,7 @@ public:
     void render_skybox();
     void render_terrain(const glm::vec4& color);
     void render_hud();
+    void render_loading();
 	void render_text(const std::string& text, float x, float y, float size, const glm::vec4& color, TextPosition text_position = TextPosition::TOPLEFT);
     void render_line(const glm::vec3& line, const glm::vec4& color = Colors::Red, float scale = 1.0f, const glm::vec3& shift = glm::vec3(0.0f));
     void render_wing_forces(Wing w, glm::mat4 parent_transform, glm::mat4 rotation);

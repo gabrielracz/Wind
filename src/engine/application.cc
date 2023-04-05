@@ -7,6 +7,7 @@ Application::Application()
 int Application::init()
 {
 	view.init(this, &sim);
+	view.render_loading();
 	sim.init();
 	return 0;
 }
