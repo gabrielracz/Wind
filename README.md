@@ -14,7 +14,14 @@ Simulating the fundamental aerodynamic forces that act on an aircraft during fli
 
 2. Install dependencies (cmake, glew, glfw, glm):
 
+    #### Debian
+
 		sudo apt install build-essential cmake libglfw3-dev libglew-dev libglm-dev
+
+    #### Fedora
+
+        sudo dnf group install "C Development Tools and Libraries"
+        sudo dnf install glew-devel glfw-devel glm-devel
 
 3. Build and run:
 		
