@@ -5,6 +5,7 @@ Simulating the fundamental aerodynamic forces that act on an aircraft during fli
 <!-- ![a screenshot of the current state of the sim](resources/screenshots/skyfly.jpg) -->
 ![a gif of the current state of the sim](resources/screenshots/wind.gif)
 
+Longer video [here](https://gsracz.com/wind.mp4)
 ## Build & Run:
 
 ### Linux:
